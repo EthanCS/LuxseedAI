@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://dkjfu8ni1ag6g"]
+
+[ext_resource type="Texture2D" uid="uid://bv37g5kq5nyem" path="res://icon.svg" id="1_ig7tw"]
+
+[node name="Main" type="Node"]
+
+[node name="GDExample" type="GDExample" parent="."]
+texture = ExtResource("1_ig7tw")
+centered = false
