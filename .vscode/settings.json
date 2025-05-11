@@ -1,0 +1,9 @@
+{
+    "cmake.ignoreCMakeListsMissing": true,
+    "clangd.fallbackFlags": [
+        "-I${workspaceFolder}\\godot-cpp\\include",
+        "-I${workspaceFolder}\\godot-cpp\\gdextension",
+        "-I${workspaceFolder}\\godot-cpp\\gen\\include",
+        "-I${workspaceFolder}\\include"
+    ],
+}

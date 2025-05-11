@@ -4,6 +4,6 @@
 
 [node name="Main" type="Node"]
 
-[node name="GDExample" type="GDExample" parent="."]
+[node name="GDExample" type="Sprite2D" parent="."]
 texture = ExtResource("1_ig7tw")
 centered = false
