@@ -3,6 +3,8 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+#include "GOAPActionPlan.h"
+#include "GOAPPlanner.h"
 #include "WorldState.h"
 
 #include "GOAPAction.h"
@@ -18,6 +20,8 @@ void initialize_example_module(ModuleInitializationLevel p_level)
 
     GDREGISTER_RUNTIME_CLASS(WorldState);
     GDREGISTER_RUNTIME_CLASS(GOAPAction);
+    GDREGISTER_RUNTIME_CLASS(GOAPActionPlan);
+    GDREGISTER_RUNTIME_CLASS(GOAPPlanner);
 }
 
 void uninitialize_example_module(ModuleInitializationLevel p_level)
