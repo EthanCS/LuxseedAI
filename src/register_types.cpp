@@ -1,9 +1,11 @@
 #include "register_types.h"
-#include "WorldState.h"
-
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
+
+#include "WorldState.h"
+
+#include "GOAPAction.h"
 
 using namespace godot;
 
@@ -15,6 +17,7 @@ void initialize_example_module(ModuleInitializationLevel p_level)
     }
 
     GDREGISTER_RUNTIME_CLASS(WorldState);
+    GDREGISTER_RUNTIME_CLASS(GOAPAction);
 }
 
 void uninitialize_example_module(ModuleInitializationLevel p_level)
