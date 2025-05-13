@@ -1,13 +1,15 @@
 #include "register_types.h"
+
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+#include "GOAPActionBehaviour.h"
 #include "GOAPActionPlan.h"
+#include "GOAPCondition.h"
+#include "GOAPEffect.h"
 #include "GOAPPlanner.h"
 #include "WorldState.h"
-
-#include "GOAPAction.h"
 
 using namespace godot;
 
@@ -19,9 +21,11 @@ void initialize_example_module(ModuleInitializationLevel p_level)
     }
 
     GDREGISTER_RUNTIME_CLASS(WorldState);
-    GDREGISTER_RUNTIME_CLASS(GOAPAction);
+    GDREGISTER_RUNTIME_CLASS(GOAPActionBehaviour);
     GDREGISTER_RUNTIME_CLASS(GOAPActionPlan);
     GDREGISTER_RUNTIME_CLASS(GOAPPlanner);
+    GDREGISTER_RUNTIME_CLASS(GOAPCondition);
+    GDREGISTER_RUNTIME_CLASS(GOAPEffect);
 }
 
 void uninitialize_example_module(ModuleInitializationLevel p_level)

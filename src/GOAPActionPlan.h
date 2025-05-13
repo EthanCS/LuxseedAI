@@ -1,7 +1,7 @@
 #ifndef GOAP_ACTION_PLAN_H
 #define GOAP_ACTION_PLAN_H
 
-#include "GOAPAction.h"
+#include "GOAPActionBehaviour.h"
 #include "GOAPPlanner.h"
 #include "WorldState.h"
 #include <godot_cpp/classes/object.hpp>

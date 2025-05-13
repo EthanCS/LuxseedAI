@@ -15,11 +15,11 @@ void GOAPPlanner::_bind_methods()
 
     ClassDB::bind_method(D_METHOD("IsActionValid", "actionIndex"), &GOAPPlanner::IsActionValid);
     ClassDB::bind_method(D_METHOD("GetNumActions"), &GOAPPlanner::GetNumActions);
-    // ClassDB::bind_method(D_METHOD("AddAction", "name", "action"), &GOAPPlanner::AddAction);
+    ClassDB::bind_method(D_METHOD("AddAction", "name", "behaviour", "condition", "effect"), &GOAPPlanner::AddAction);
 
     ClassDB::bind_method(D_METHOD("IsGoalValid", "goalIndex"), &GOAPPlanner::IsGoalValid);
     ClassDB::bind_method(D_METHOD("GetNumGoals"), &GOAPPlanner::GetNumGoals);
-    // ClassDB::bind_method(D_METHOD("AddGoal", "name", "priority"), &GOAPPlanner::AddGoal);
+    ClassDB::bind_method(D_METHOD("AddGoal", "name", "priority", "condition", "effect"), &GOAPPlanner::AddGoal);
 }
 
 bool GOAPPlanner::CheckIfPlanSuccess(const Goal &InGoal, const WorldState *InWorldState,
