@@ -4,8 +4,8 @@
 #include "GOAPAction.h"
 #include "GOAPPlanner.h"
 #include "WorldState.h"
-#include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/classes/object.hpp>
+#include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/variant.hpp>
 #include <vector>
 
@@ -34,13 +34,23 @@ public:
     int Length() const noexcept { return actionSequences.size(); }
 
     void Reset();
+    void Execute(WorldState *InWorldState, float InDeltaTime);
 
+public:
     void Swap(int i, int j)
     {
         int temp = actionSequences[i];
         actionSequences[i] = actionSequences[j];
         actionSequences[j] = temp;
     }
+
+    GOAPPlanner *GetPlanner() const noexcept { return planner; }
+
+    GOAPPlanner::Action *Get(int Index) noexcept { return planner->GetAction(actionSequences[Index]); }
+    const GOAPPlanner::Action *Get(int Index) const noexcept { return planner->GetAction(actionSequences[Index]); }
+
+    void PushBack(int ActionIndex) { actionSequences.push_back(ActionIndex); }
+    void Reverse() { std::reverse(actionSequences.begin(), actionSequences.end()); }
 };
 
 #endif
