@@ -10,6 +10,7 @@
 #include "GOAPEffect.h"
 #include "GOAPPlanner.h"
 #include "WorldState.h"
+#include "WorldStateAsset.h"
 
 using namespace godot;
 
@@ -21,6 +22,9 @@ void initialize_example_module(ModuleInitializationLevel p_level)
     }
 
     GDREGISTER_RUNTIME_CLASS(WorldState);
+    GDREGISTER_RUNTIME_CLASS(WorldStateAsset);
+    GDREGISTER_RUNTIME_CLASS(WorldStateEntryAsset);
+
     GDREGISTER_RUNTIME_CLASS(GOAPActionBehaviour);
     GDREGISTER_RUNTIME_CLASS(GOAPActionPlan);
     GDREGISTER_RUNTIME_CLASS(GOAPPlanner);
