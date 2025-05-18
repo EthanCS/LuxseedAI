@@ -1,11 +1,11 @@
 #ifndef GOAP_ASSET_H
 #define GOAP_ASSET_H
 
-#include "godot_cpp/core/binder_common.hpp"
 #include <godot_cpp/classes/gd_script.hpp>
 #include <godot_cpp/classes/node2d.hpp>
 #include <godot_cpp/classes/resource.hpp>
-#include <godot_cpp/classes/gd_script.hpp>
+
+#include "WorldStateAsset.h"
 
 using namespace godot;
 
@@ -81,6 +81,7 @@ class GOAPAsset : public Resource
     GDCLASS(GOAPAsset, Resource)
 
 private:
+    Ref<WorldStateAsset> worldState;
     TypedArray<GOAPGoalAsset> goals;
     TypedArray<GOAPActionAsset> actions;
 
@@ -95,6 +96,11 @@ public:
 
     void set_actions(const TypedArray<GOAPActionAsset> &p_actions);
     TypedArray<GOAPActionAsset> get_actions() const;
+
+    void set_world_state(const Ref<WorldStateAsset> &p_world_state) { worldState = p_world_state; }
+    Ref<WorldStateAsset> get_world_state() const { return worldState; }
+
+    class GOAPPlanner *create_planner() const;
 };
 
 #endif // GOAP_ASSET_H

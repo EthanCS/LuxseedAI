@@ -1,4 +1,5 @@
 #include "GOAPAsset.h"
+#include "GOAPPlanner.h"
 
 //////////////////////////////////////////////////////////////////////////////////////
 // GOAPGoalAsset
@@ -75,17 +76,23 @@ GOAPAsset::GOAPAsset()
 
 void GOAPAsset::_bind_methods()
 {
+    ClassDB::bind_method(D_METHOD("create_planner"), &GOAPAsset::create_planner);
+
+    ClassDB::bind_method(D_METHOD("get_world_state"), &GOAPAsset::get_world_state);
+    ClassDB::bind_method(D_METHOD("set_world_state", "ws"), &GOAPAsset::set_world_state);
+
     ClassDB::bind_method(D_METHOD("get_goals"), &GOAPAsset::get_goals);
     ClassDB::bind_method(D_METHOD("set_goals", "goals"), &GOAPAsset::set_goals);
 
     ClassDB::bind_method(D_METHOD("get_actions"), &GOAPAsset::get_actions);
     ClassDB::bind_method(D_METHOD("set_actions", "actions"), &GOAPAsset::set_actions);
 
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "world_state", PROPERTY_HINT_RESOURCE_TYPE, "WorldStateAsset"),
+                 "set_world_state", "get_world_state");
     ADD_PROPERTY(
         PropertyInfo(Variant::ARRAY, "goals", PROPERTY_HINT_TYPE_STRING,
                      String::num(Variant::OBJECT) + "/" + String::num(PROPERTY_HINT_RESOURCE_TYPE) + ":GOAPGoalAsset"),
         "set_goals", "get_goals");
-
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "actions", PROPERTY_HINT_TYPE_STRING,
                               String::num(Variant::OBJECT) + "/" + String::num(PROPERTY_HINT_RESOURCE_TYPE) +
                                   ":GOAPActionAsset"),
@@ -97,3 +104,9 @@ TypedArray<GOAPGoalAsset> GOAPAsset::get_goals() const { return goals; }
 
 void GOAPAsset::set_actions(const TypedArray<GOAPActionAsset> &p_actions) { actions = p_actions; }
 TypedArray<GOAPActionAsset> GOAPAsset::get_actions() const { return actions; }
+
+GOAPPlanner *GOAPAsset::create_planner() const
+{
+    GOAPPlanner *planner = memnew(GOAPPlanner);
+    return planner;
+}
