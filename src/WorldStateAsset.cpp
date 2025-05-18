@@ -34,7 +34,7 @@ void WorldStateEntryAsset::reset_value()
     }
 }
 
-Variant WorldStateEntryAsset::get_value() const { return value; }
+const Variant &WorldStateEntryAsset::get_value() const { return value; }
 void WorldStateEntryAsset::set_value(const Variant &p_value)
 {
     value = p_value;
@@ -120,7 +120,7 @@ bool WorldStateEntryAsset::_set(const StringName &p_path, const Variant &p_value
     return true;
 }
 
-String WorldStateEntryAsset::get_name() const { return name; }
+const String &WorldStateEntryAsset::get_name() const { return name; }
 void WorldStateEntryAsset::set_name(const String &p_name) { name = p_name; }
 
 //////////////////////////////////////////////////////////////////////////////////////

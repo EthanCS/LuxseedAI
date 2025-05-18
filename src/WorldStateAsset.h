@@ -36,13 +36,13 @@ protected:
 public:
     WorldStateEntryAsset();
 
-    String get_name() const;
+    const String &get_name() const;
     void set_name(const String &p_name);
 
     SupportedType get_supported_type() const;
     void set_supported_type(SupportedType p_type);
 
-    Variant get_value() const;
+    const Variant &get_value() const;
     void set_value(const Variant &p_value);
 };
 

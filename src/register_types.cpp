@@ -6,9 +6,11 @@
 
 #include "GOAPActionBehaviour.h"
 #include "GOAPActionPlan.h"
+#include "GOAPAsset.h"
 #include "GOAPCondition.h"
 #include "GOAPEffect.h"
 #include "GOAPPlanner.h"
+
 #include "WorldState.h"
 #include "WorldStateAsset.h"
 
@@ -25,6 +27,9 @@ void initialize_example_module(ModuleInitializationLevel p_level)
     GDREGISTER_CLASS(WorldStateAsset);
     GDREGISTER_CLASS(WorldStateEntryAsset);
 
+    GDREGISTER_CLASS(GOAPAsset);
+    GDREGISTER_CLASS(GOAPGoalAsset);
+    GDREGISTER_CLASS(GOAPActionAsset);
     GDREGISTER_RUNTIME_CLASS(GOAPActionBehaviour);
     GDREGISTER_RUNTIME_CLASS(GOAPActionPlan);
     GDREGISTER_RUNTIME_CLASS(GOAPPlanner);
