@@ -1,30 +1,72 @@
 #include "WorldStateAsset.h"
 
+//////////////////////////////////////////////////////////////////////////////////////
+// WorldStateEntryAsset
+//////////////////////////////////////////////////////////////////////////////////////
+WorldStateEntryAsset::WorldStateEntryAsset() : supportedType(SupportedType::Int), name(""), value(0) {}
+
+WorldStateEntryAsset::SupportedType WorldStateEntryAsset::get_supported_type() const { return supportedType; }
+void WorldStateEntryAsset::set_supported_type(SupportedType p_type)
+{
+    if (supportedType == p_type)
+        return;
+
+    supportedType = p_type;
+    reset_value();
+
+    notify_property_list_changed();
+    emit_changed();
+}
+
+void WorldStateEntryAsset::reset_value()
+{
+    switch (supportedType)
+    {
+    case Int:
+        set_value(0);
+        break;
+    case Float:
+        set_value(0.0f);
+        break;
+    case Bool:
+        set_value(false);
+        break;
+    }
+}
+
+Variant WorldStateEntryAsset::get_value() const { return value; }
+void WorldStateEntryAsset::set_value(const Variant &p_value)
+{
+    value = p_value;
+    emit_changed();
+}
+
 void WorldStateEntryAsset::_bind_methods()
 {
     BIND_ENUM_CONSTANT(Int);
     BIND_ENUM_CONSTANT(Float);
     BIND_ENUM_CONSTANT(Bool);
 
+    ClassDB::bind_method(D_METHOD("reset_value"), &WorldStateEntryAsset::reset_value);
+
     ClassDB::bind_method(D_METHOD("set_name", "name"), &WorldStateEntryAsset::set_name);
     ClassDB::bind_method(D_METHOD("get_name"), &WorldStateEntryAsset::get_name);
+
     ClassDB::bind_method(D_METHOD("set_supported_type", "type"), &WorldStateEntryAsset::set_supported_type);
     ClassDB::bind_method(D_METHOD("get_supported_type"), &WorldStateEntryAsset::get_supported_type);
 
-    ClassDB::bind_method(D_METHOD("get_buffer_data"), &WorldStateEntryAsset::get_buffer_data);
-    ClassDB::bind_method(D_METHOD("set_buffer_data", "data"), &WorldStateEntryAsset::set_buffer_data);
+    ClassDB::bind_method(D_METHOD("get_value"), &WorldStateEntryAsset::get_value);
+    ClassDB::bind_method(D_METHOD("set_value", "value"), &WorldStateEntryAsset::set_value);
 
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "supported_type", PROPERTY_HINT_ENUM, "Int,Float,Bool"),
-                 "set_supported_type", "get_supported_type");
-    ADD_PROPERTY(
-        PropertyInfo(Variant::PACKED_BYTE_ARRAY, "buffer_data", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE),
-        "set_buffer_data", "get_buffer_data");
 }
 
 void WorldStateEntryAsset::_get_property_list(List<PropertyInfo> *p_list) const
 {
-    Variant::Type type;
+    p_list->push_back(
+        PropertyInfo(Variant::INT, "supportedType", PROPERTY_HINT_ENUM, "Int,Float,Bool", PROPERTY_USAGE_DEFAULT));
+
+    Variant::Type type = Variant::Type::NIL;
     switch (supportedType)
     {
     case Int:
@@ -36,92 +78,63 @@ void WorldStateEntryAsset::_get_property_list(List<PropertyInfo> *p_list) const
     case Bool:
         type = Variant::BOOL;
         break;
-    default:
-        return;
     }
-    p_list->push_back(PropertyInfo(type, "value"));
+
+    p_list->push_back(PropertyInfo(type, "value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT));
 }
 
-bool WorldStateEntryAsset::_get(const StringName &p_name, Variant &r_ret) const
+bool WorldStateEntryAsset::_get(const StringName &p_path, Variant &r_ret) const
 {
-    if (p_name == StringName("value"))
+    String path = p_path;
+    if (path == "supportedType")
     {
-        switch (supportedType)
-        {
-        case Int:
-            r_ret = *reinterpret_cast<const int32_t *>(buffer);
-            return true;
-        case Float:
-            r_ret = *reinterpret_cast<const float *>(buffer);
-            return true;
-        case Bool:
-            r_ret = *reinterpret_cast<const bool *>(buffer);
-            return true;
-        }
+        r_ret = get_supported_type();
     }
-    return false;
-}
-
-bool WorldStateEntryAsset::_set(const StringName &p_name, const Variant &p_value)
-{
-    if (p_name == StringName("value"))
+    else if (path == "value")
     {
-        switch (supportedType)
-        {
-        case Int:
-            *reinterpret_cast<int32_t *>(buffer) = p_value;
-            return true;
-        case Float:
-            *reinterpret_cast<float *>(buffer) = p_value;
-            return true;
-        case Bool:
-            *reinterpret_cast<bool *>(buffer) = p_value;
-            return true;
-        }
+        r_ret = get_value();
     }
-    return false;
-}
-
-PackedByteArray WorldStateEntryAsset::get_buffer_data() const
-{
-    PackedByteArray arr;
-    arr.resize(kMaxBufferSize);
-    memcpy((void *)arr.ptrw(), buffer, kMaxBufferSize);
-    return arr;
-}
-
-void WorldStateEntryAsset::set_buffer_data(const PackedByteArray &p_data)
-{
-    memset(buffer, 0, kMaxBufferSize); // 清空缓冲区
-    if (p_data.size() > 0)
+    else
     {
-        memcpy(buffer, p_data.ptr(), MIN(p_data.size(), kMaxBufferSize));
+        return false;
     }
+    return true;
+}
+
+bool WorldStateEntryAsset::_set(const StringName &p_path, const Variant &p_value)
+{
+    String path = p_path;
+    if (path == "supportedType")
+    {
+        set_supported_type((SupportedType)(unsigned int)p_value);
+    }
+    else if (path == "value")
+    {
+        set_value(p_value);
+    }
+    else
+    {
+        return false;
+    }
+
+    return true;
 }
 
 String WorldStateEntryAsset::get_name() const { return name; }
 void WorldStateEntryAsset::set_name(const String &p_name) { name = p_name; }
 
-WorldStateEntryAsset::SupportedType WorldStateEntryAsset::get_supported_type() const { return supportedType; }
-void WorldStateEntryAsset::set_supported_type(SupportedType p_type)
-{
-    supportedType = p_type;
-    memset(buffer, 0, kMaxBufferSize);
-}
+//////////////////////////////////////////////////////////////////////////////////////
+// WorldStateAsset
+//////////////////////////////////////////////////////////////////////////////////////
+WorldStateAsset::WorldStateAsset() {}
 
 void WorldStateAsset::_bind_methods()
 {
-    ClassDB::bind_method(D_METHOD("set_data", "data"), &WorldStateAsset::set_data);
-    ClassDB::bind_method(D_METHOD("get_data"), &WorldStateAsset::get_data);
-    ClassDB::bind_method(D_METHOD("set_value", "value"), &WorldStateAsset::set_value);
-    ClassDB::bind_method(D_METHOD("get_value"), &WorldStateAsset::get_value);
+    ClassDB::bind_method(D_METHOD("get_entries"), &WorldStateAsset::get_entries);
+    ClassDB::bind_method(D_METHOD("set_entries", "entries"), &WorldStateAsset::set_entries);
 
-    ADD_PROPERTY(PropertyInfo(Variant::STRING, "data"), "set_data", "get_data");
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "value"), "set_value", "get_value");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "entries", PROPERTY_HINT_TYPE_STRING,
+                              String::num(Variant::OBJECT) + "/" + String::num(PROPERTY_HINT_RESOURCE_TYPE) +
+                                  ":WorldStateEntryAsset"),
+                 "set_entries", "get_entries");
 }
-
-void WorldStateAsset::set_data(const String &p_data) { data = p_data; }
-String WorldStateAsset::get_data() const { return data; }
-
-void WorldStateAsset::set_value(int p_value) { value = p_value; }
-int WorldStateAsset::get_value() const { return value; }
