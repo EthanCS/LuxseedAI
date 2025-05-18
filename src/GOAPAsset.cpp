@@ -21,9 +21,9 @@ void GOAPGoalAsset::_bind_methods()
 
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "priority"), "set_priority", "get_priority");
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "condition", PROPERTY_HINT_RESOURCE_TYPE, "Script"), "set_condition",
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "condition", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_condition",
                  "get_condition");
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "effect", PROPERTY_HINT_RESOURCE_TYPE, "Script"), "set_effect",
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "effect", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_effect",
                  "get_effect");
 }
 
@@ -53,11 +53,11 @@ void GOAPActionAsset::_bind_methods()
     ClassDB::bind_method(D_METHOD("set_action", "action"), &GOAPActionAsset::set_action);
 
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "condition", PROPERTY_HINT_RESOURCE_TYPE, "Script"), "set_condition",
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "condition", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_condition",
                  "get_condition");
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "effect", PROPERTY_HINT_RESOURCE_TYPE, "Script"), "set_effect",
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "effect", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_effect",
                  "get_effect");
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "action", PROPERTY_HINT_RESOURCE_TYPE, "Script"), "set_action",
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "action", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_action",
                  "get_action");
 }
 

@@ -5,7 +5,7 @@
 #include <godot_cpp/classes/gd_script.hpp>
 #include <godot_cpp/classes/node2d.hpp>
 #include <godot_cpp/classes/resource.hpp>
-#include <godot_cpp/classes/script.hpp>
+#include <godot_cpp/classes/gd_script.hpp>
 
 using namespace godot;
 
@@ -19,8 +19,8 @@ class GOAPGoalAsset : public Resource
 private:
     String name;
     int priority;
-    Ref<Script> condition;
-    Ref<Script> effect;
+    Ref<GDScript> condition;
+    Ref<GDScript> effect;
 
 protected:
     static void _bind_methods();
@@ -34,11 +34,11 @@ public:
     void set_priority(int p_priority);
     int get_priority() const;
 
-    void set_condition(const Ref<Script> &p_condition) { condition = p_condition; }
-    Ref<Script> get_condition() const { return condition; }
+    void set_condition(const Ref<GDScript> &p_condition) { condition = p_condition; }
+    Ref<GDScript> get_condition() const { return condition; }
 
-    void set_effect(const Ref<Script> &p_effect) { effect = p_effect; }
-    Ref<Script> get_effect() const { return effect; }
+    void set_effect(const Ref<GDScript> &p_effect) { effect = p_effect; }
+    Ref<GDScript> get_effect() const { return effect; }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -50,9 +50,9 @@ class GOAPActionAsset : public Resource
 
 private:
     String name;
-    Ref<Script> condition;
-    Ref<Script> effect;
-    Ref<Script> action;
+    Ref<GDScript> condition;
+    Ref<GDScript> effect;
+    Ref<GDScript> action;
 
 protected:
     static void _bind_methods();
@@ -63,14 +63,14 @@ public:
     void set_name(const String &p_name);
     const String &get_name() const;
 
-    void set_condition(const Ref<Script> &p_condition) { condition = p_condition; }
-    Ref<Script> get_condition() const { return condition; }
+    void set_condition(const Ref<GDScript> &p_condition) { condition = p_condition; }
+    Ref<GDScript> get_condition() const { return condition; }
 
-    void set_effect(const Ref<Script> &p_effect) { effect = p_effect; }
-    Ref<Script> get_effect() const { return effect; }
+    void set_effect(const Ref<GDScript> &p_effect) { effect = p_effect; }
+    Ref<GDScript> get_effect() const { return effect; }
 
-    void set_action(const Ref<Script> &p_action) { action = p_action; }
-    Ref<Script> get_action() const { return action; }
+    void set_action(const Ref<GDScript> &p_action) { action = p_action; }
+    Ref<GDScript> get_action() const { return action; }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
