@@ -81,9 +81,9 @@ class GOAPAsset : public Resource
     GDCLASS(GOAPAsset, Resource)
 
 private:
-    Ref<WorldStateAsset> worldState;
-    TypedArray<GOAPGoalAsset> goals;
-    TypedArray<GOAPActionAsset> actions;
+    Ref<WorldStateAsset> world_state_asset;
+    TypedArray<GOAPGoalAsset> goal_assets;
+    TypedArray<GOAPActionAsset> action_assets;
 
 protected:
     static void _bind_methods();
@@ -91,14 +91,14 @@ protected:
 public:
     GOAPAsset();
 
-    void set_goals(const TypedArray<GOAPGoalAsset> &p_goals);
-    TypedArray<GOAPGoalAsset> get_goals() const;
+    void set_goal_assets(const TypedArray<GOAPGoalAsset> &p_goals);
+    TypedArray<GOAPGoalAsset> get_goal_assets() const;
 
-    void set_actions(const TypedArray<GOAPActionAsset> &p_actions);
-    TypedArray<GOAPActionAsset> get_actions() const;
+    void set_action_assets(const TypedArray<GOAPActionAsset> &p_actions);
+    TypedArray<GOAPActionAsset> get_action_assets() const;
 
-    void set_world_state(const Ref<WorldStateAsset> &p_world_state) { worldState = p_world_state; }
-    Ref<WorldStateAsset> get_world_state() const { return worldState; }
+    void set_world_state_asset(const Ref<WorldStateAsset> &p_world_state) { world_state_asset = p_world_state; }
+    Ref<WorldStateAsset> get_world_state_asset() const { return world_state_asset; }
 
     class GOAPPlanner *create_planner() const;
 };

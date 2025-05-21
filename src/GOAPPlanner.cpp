@@ -34,20 +34,22 @@ void GOAPPlanner::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("get_debug_name"), &GOAPPlanner::get_debug_name);
     ClassDB::bind_method(D_METHOD("set_debug_name", "name"), &GOAPPlanner::set_debug_name);
-    ClassDB::add_property("GOAPPlanner", PropertyInfo(Variant::STRING, "debug_name"), "SetDebugName", "GetDebugName");
 
     ClassDB::bind_method(D_METHOD("get_world_state"), &GOAPPlanner::get_world_state);
 
-    ClassDB::bind_method(D_METHOD("is_action_valid", "actionIndex"), &GOAPPlanner::is_action_valid);
+    ClassDB::bind_method(D_METHOD("is_action_valid", "action_index"), &GOAPPlanner::is_action_valid);
     ClassDB::bind_method(D_METHOD("get_action_count"), &GOAPPlanner::get_action_count);
     ClassDB::bind_method(D_METHOD("add_action", "action"), &GOAPPlanner::add_action);
 
     ClassDB::bind_method(D_METHOD("is_goal_valid", "goal_index"), &GOAPPlanner::is_goal_valid);
     ClassDB::bind_method(D_METHOD("get_goal_count"), &GOAPPlanner::get_goal_count);
     ClassDB::bind_method(D_METHOD("add_goal", "goal"), &GOAPPlanner::add_goal);
+
+    ClassDB::add_property("GOAPPlanner", PropertyInfo(Variant::STRING, "debug_name"), "set_debug_name",
+                          "get_debug_name");
 }
 
-void GOAPPlanner::set_world_state(const WorldStateAsset *world_state_asset) noexcept
+void GOAPPlanner::set_world_state_from_asset(const WorldStateAsset *world_state_asset) noexcept
 {
     if (world_state_asset == nullptr)
         return;
@@ -115,9 +117,9 @@ bool GOAPPlanner::check_if_plan_success(const Goal &InGoal, const WorldState *In
 
     TempWs->copy_data_from(InWorldState);
 
-    for (int Index = InTestPlan->Length() - 1; Index >= 0; --Index)
+    for (int Index = InTestPlan->length() - 1; Index >= 0; --Index)
     {
-        const auto *Action = InTestPlan->Get(Index);
+        const auto *Action = InTestPlan->get(Index);
         if (!Action->is_pass_condition(TempWs))
         {
             bSuccess = false;
@@ -142,13 +144,13 @@ bool GOAPPlanner::search_plan_brute_force(class GOAPActionPlan *OutPlan, const W
 
     for (int mask = 1; mask < (1 << NumActions); mask++)
     {
-        OutPlan->Reset();
+        OutPlan->reset();
 
         for (int i = 0; i < NumActions; i++)
         {
             if ((mask & (1 << i)) != 0)
             {
-                OutPlan->PushBack(i);
+                OutPlan->push_back(i);
             }
         }
 
@@ -165,21 +167,21 @@ bool GOAPPlanner::search_plan_brute_force(class GOAPActionPlan *OutPlan, const W
 bool GOAPPlanner::permute_test_plan(class GOAPActionPlan *InOutPlan, const Goal &InGoal, const WorldState *InWorldState,
                                     int InCurrentIndex, WorldState *TempWs)
 {
-    if (InCurrentIndex == InOutPlan->Length())
+    if (InCurrentIndex == InOutPlan->length())
     {
         return check_if_plan_success(InGoal, InWorldState, InOutPlan, TempWs);
     }
 
-    for (int i = InCurrentIndex; i < InOutPlan->Length(); i++)
+    for (int i = InCurrentIndex; i < InOutPlan->length(); i++)
     {
-        InOutPlan->Swap(InCurrentIndex, i);
+        InOutPlan->swap(InCurrentIndex, i);
 
         if (permute_test_plan(InOutPlan, InGoal, InWorldState, InCurrentIndex + 1, TempWs))
         {
             return true;
         }
 
-        InOutPlan->Swap(InCurrentIndex, i);
+        InOutPlan->swap(InCurrentIndex, i);
     }
 
     return false;

@@ -1,13 +1,15 @@
 #ifndef GOAP_ACTION_PLAN_H
 #define GOAP_ACTION_PLAN_H
 
-#include "GOAPActionBehaviour.h"
-#include "GOAPPlanner.h"
-#include "WorldState.h"
+#include <algorithm>
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/variant.hpp>
 #include <vector>
+
+#include "GOAPActionBehaviour.h"
+#include "GOAPPlanner.h"
+#include "WorldState.h"
 
 using namespace godot;
 
@@ -17,11 +19,11 @@ class GOAPActionPlan : public Object
 
 private:
     GOAPPlanner *planner;
-    int goalIndex;
-    std::vector<int> actionSequences;
-    int curActionIndex;
-    bool bNeedStartAction;
-    bool bFinished;
+    int goal_index;
+    std::vector<int> action_sequence;
+    int current_action_index;
+    bool need_start_action;
+    bool finished;
 
 protected:
     static void _bind_methods();
@@ -29,28 +31,28 @@ protected:
 public:
     GOAPActionPlan();
 
-    bool IsFinished() const noexcept { return bFinished; }
-    bool IsEmpty() const noexcept { return actionSequences.empty(); }
-    int Length() const noexcept { return actionSequences.size(); }
+    bool is_finished() const noexcept { return finished; }
+    bool is_empty() const noexcept { return action_sequence.empty(); }
+    int length() const noexcept { return action_sequence.size(); }
 
-    void Reset();
-    void Execute(WorldState *InWorldState, float InDeltaTime);
+    void reset();
+    void execute(WorldState *ws, float dt);
 
 public:
-    void Swap(int i, int j)
+    void swap(int i, int j)
     {
-        int temp = actionSequences[i];
-        actionSequences[i] = actionSequences[j];
-        actionSequences[j] = temp;
+        int temp = action_sequence[i];
+        action_sequence[i] = action_sequence[j];
+        action_sequence[j] = temp;
     }
 
-    GOAPPlanner *GetPlanner() const noexcept { return planner; }
+    GOAPPlanner *get_planner() const noexcept { return planner; }
 
-    GOAPPlanner::Action *Get(int Index) noexcept { return planner->get_action(actionSequences[Index]); }
-    const GOAPPlanner::Action *Get(int Index) const noexcept { return planner->get_action(actionSequences[Index]); }
+    GOAPPlanner::Action *get(int index) noexcept { return planner->get_action(action_sequence[index]); }
+    const GOAPPlanner::Action *get(int index) const noexcept { return planner->get_action(action_sequence[index]); }
 
-    void PushBack(int ActionIndex) { actionSequences.push_back(ActionIndex); }
-    void Reverse() { std::reverse(actionSequences.begin(), actionSequences.end()); }
+    void push_back(int action_index) { action_sequence.push_back(action_index); }
+    void reverse() { std::reverse(action_sequence.begin(), action_sequence.end()); }
 };
 
 #endif

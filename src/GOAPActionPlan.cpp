@@ -7,67 +7,67 @@ GOAPActionPlan::GOAPActionPlan() {}
 
 void GOAPActionPlan::_bind_methods()
 {
-    ClassDB::bind_method(D_METHOD("IsFinished"), &GOAPActionPlan::IsFinished);
-    ClassDB::bind_method(D_METHOD("IsEmpty"), &GOAPActionPlan::IsEmpty);
-    ClassDB::bind_method(D_METHOD("Length"), &GOAPActionPlan::Length);
+    ClassDB::bind_method(D_METHOD("is_finished"), &GOAPActionPlan::is_finished);
+    ClassDB::bind_method(D_METHOD("is_empty"), &GOAPActionPlan::is_empty);
+    ClassDB::bind_method(D_METHOD("length"), &GOAPActionPlan::length);
 
-    ClassDB::bind_method(D_METHOD("Reset"), &GOAPActionPlan::Reset);
-    ClassDB::bind_method(D_METHOD("Execute", "InWorldState", "InDeltaTime"), &GOAPActionPlan::Execute);
+    ClassDB::bind_method(D_METHOD("reset"), &GOAPActionPlan::reset);
+    ClassDB::bind_method(D_METHOD("execute", "ws", "dt"), &GOAPActionPlan::execute);
 }
 
-void GOAPActionPlan::Reset()
+void GOAPActionPlan::reset()
 {
-    goalIndex = -1;
-    actionSequences.clear();
-    curActionIndex = -1;
-    bNeedStartAction = true;
-    bFinished = false;
+    goal_index = -1;
+    action_sequence.clear();
+    current_action_index = -1;
+    need_start_action = true;
+    finished = false;
 }
 
-void GOAPActionPlan::Execute(WorldState *InWorldState, float InDeltaTime)
+void GOAPActionPlan::execute(WorldState *ws, float dt)
 {
-    if (InWorldState == nullptr || planner == nullptr)
+    if (ws == nullptr || planner == nullptr)
     {
-        godot::print_error("GOAPActionPlan::Execute: InWorldState or planner is nullptr");
+        godot::print_error("GOAPActionPlan::execute: ws or planner is nullptr");
         return;
     }
 
-    if (!planner->is_goal_valid(goalIndex))
+    if (!planner->is_goal_valid(goal_index))
     {
-        godot::print_error("GOAPActionPlan::Execute: Invalid goal index {}", goalIndex);
+        godot::print_error("GOAPActionPlan::execute: Invalid goal index {}", goal_index);
         return;
     }
 
-    if (IsFinished() || IsEmpty())
+    if (is_finished() || is_empty())
         return;
 
-    if (!planner->is_action_valid(curActionIndex))
+    if (!planner->is_action_valid(current_action_index))
         return;
 
-    GOAPPlanner::Action *action = planner->get_action(curActionIndex);
-    action->SyncWorldStateProperty(InWorldState);
+    GOAPPlanner::Action *action = planner->get_action(current_action_index);
+    action->sync_world_state_variable(ws);
 
-    if (bNeedStartAction)
+    if (need_start_action)
     {
         action->start();
-        bNeedStartAction = false;
+        need_start_action = false;
     }
 
-    action->update(InDeltaTime);
+    action->update(dt);
 
     if (action->is_done())
     {
         action->end();
-        action->apply_effect(InWorldState);
-        curActionIndex++;
-        bNeedStartAction = true;
+        action->apply_effect(ws);
+        current_action_index++;
+        need_start_action = true;
     }
 
-    if (curActionIndex >= actionSequences.size())
+    if (current_action_index >= action_sequence.size())
     {
-        curActionIndex = actionSequences.size() - 1;
-        bFinished = true;
-        GOAPPlanner::Goal *goal = planner->get_goal(goalIndex);
-        goal->apply_effect(InWorldState);
+        current_action_index = action_sequence.size() - 1;
+        finished = true;
+        GOAPPlanner::Goal *goal = planner->get_goal(goal_index);
+        goal->apply_effect(ws);
     }
 }

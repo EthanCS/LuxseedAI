@@ -60,7 +60,7 @@ public:
                 effect->apply(ws);
         }
 
-        void SyncWorldStateProperty(const WorldState *ws) {}
+        void sync_world_state_variable(const WorldState *ws) {}
 
         void start() { behaviour->start(); }
         void update(float dt) { behaviour->update(dt); }
@@ -90,7 +90,7 @@ public:
     void set_debug_name(const String &name) noexcept { debug_name = name; }
 
     WorldState *get_world_state() const noexcept { return world_state; }
-    void set_world_state(const WorldStateAsset *world_state_asset) noexcept;
+    void set_world_state_from_asset(const WorldStateAsset *world_state_asset) noexcept;
 
     void add_action(const GOAPActionAsset *action) noexcept;
     bool is_action_valid(int index) const noexcept { return index >= 0 && index < actions.size(); }

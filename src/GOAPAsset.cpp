@@ -71,43 +71,69 @@ void GOAPActionAsset::set_name(const String &p_name) { name = p_name; }
 //////////////////////////////////////////////////////////////////////////////////////
 GOAPAsset::GOAPAsset()
 {
-    goals.clear();
-    actions.clear();
+    goal_assets.clear();
+    action_assets.clear();
 }
 
 void GOAPAsset::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("create_planner"), &GOAPAsset::create_planner);
 
-    ClassDB::bind_method(D_METHOD("get_world_state"), &GOAPAsset::get_world_state);
-    ClassDB::bind_method(D_METHOD("set_world_state", "ws"), &GOAPAsset::set_world_state);
+    ClassDB::bind_method(D_METHOD("get_world_state_asset"), &GOAPAsset::get_world_state_asset);
+    ClassDB::bind_method(D_METHOD("set_world_state_asset", "ws"), &GOAPAsset::set_world_state_asset);
 
-    ClassDB::bind_method(D_METHOD("get_goals"), &GOAPAsset::get_goals);
-    ClassDB::bind_method(D_METHOD("set_goals", "goals"), &GOAPAsset::set_goals);
+    ClassDB::bind_method(D_METHOD("get_goal_assets"), &GOAPAsset::get_goal_assets);
+    ClassDB::bind_method(D_METHOD("set_goal_assets", "goals"), &GOAPAsset::set_goal_assets);
 
-    ClassDB::bind_method(D_METHOD("get_actions"), &GOAPAsset::get_actions);
-    ClassDB::bind_method(D_METHOD("set_actions", "actions"), &GOAPAsset::set_actions);
+    ClassDB::bind_method(D_METHOD("get_action_assets"), &GOAPAsset::get_action_assets);
+    ClassDB::bind_method(D_METHOD("set_action_assets", "actions"), &GOAPAsset::set_action_assets);
 
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "world_state", PROPERTY_HINT_RESOURCE_TYPE, "WorldStateAsset"),
-                 "set_world_state", "get_world_state");
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "world_state_asset", PROPERTY_HINT_RESOURCE_TYPE, "WorldStateAsset"),
+                 "set_world_state_asset", "get_world_state_asset");
     ADD_PROPERTY(
         PropertyInfo(Variant::ARRAY, "goals", PROPERTY_HINT_TYPE_STRING,
                      String::num(Variant::OBJECT) + "/" + String::num(PROPERTY_HINT_RESOURCE_TYPE) + ":GOAPGoalAsset"),
-        "set_goals", "get_goals");
+        "set_goal_assets", "get_goal_assets");
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "actions", PROPERTY_HINT_TYPE_STRING,
                               String::num(Variant::OBJECT) + "/" + String::num(PROPERTY_HINT_RESOURCE_TYPE) +
                                   ":GOAPActionAsset"),
-                 "set_actions", "get_actions");
+                 "set_action_assets", "get_action_assets");
 }
 
-void GOAPAsset::set_goals(const TypedArray<GOAPGoalAsset> &p_goals) { goals = p_goals; }
-TypedArray<GOAPGoalAsset> GOAPAsset::get_goals() const { return goals; }
+void GOAPAsset::set_goal_assets(const TypedArray<GOAPGoalAsset> &p_goals) { goal_assets = p_goals; }
+TypedArray<GOAPGoalAsset> GOAPAsset::get_goal_assets() const { return goal_assets; }
 
-void GOAPAsset::set_actions(const TypedArray<GOAPActionAsset> &p_actions) { actions = p_actions; }
-TypedArray<GOAPActionAsset> GOAPAsset::get_actions() const { return actions; }
+void GOAPAsset::set_action_assets(const TypedArray<GOAPActionAsset> &p_actions) { action_assets = p_actions; }
+TypedArray<GOAPActionAsset> GOAPAsset::get_action_assets() const { return action_assets; }
 
 GOAPPlanner *GOAPAsset::create_planner() const
 {
+    if (!world_state_asset.is_valid())
+    {
+        print_error("GOAPAsset::create_planner: worldState is null");
+        return nullptr;
+    }
+
     GOAPPlanner *planner = memnew(GOAPPlanner);
+    planner->set_world_state_from_asset(world_state_asset.ptr());
+
+    for (int i = 0; i < goal_assets.size(); i++)
+    {
+        if (goal_assets[i].get_type() == Variant::NIL)
+            continue;
+
+        Ref<GOAPGoalAsset> goal = goal_assets[i];
+        planner->add_goal(goal.ptr());
+    }
+
+    for (int i = 0; i < action_assets.size(); i++)
+    {
+        if (action_assets[i].get_type() == Variant::NIL)
+            continue;
+
+        Ref<GOAPActionAsset> action = action_assets[i];
+        planner->add_action(action.ptr());
+    }
+
     return planner;
 }
