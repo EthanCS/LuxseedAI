@@ -2,9 +2,21 @@
 #include "godot_cpp/core/print_string.hpp"
 #include <godot_cpp/core/class_db.hpp>
 
-WorldState::WorldState() : bSnapshot(false), mainWorldState(nullptr) {}
+WorldState::WorldState() : is_snapshot(false), master_world_state(nullptr) {}
 
-void WorldState::SnapshotFrom(const WorldState *src)
+void WorldState::_bind_methods()
+{
+    ClassDB::bind_method(D_METHOD("snapshot_from", "src"), &WorldState::snapshot_from);
+    ClassDB::bind_method(D_METHOD("copy_data_from", "src"), &WorldState::copy_data_from);
+    ClassDB::bind_method(D_METHOD("is_valid"), &WorldState::is_valid);
+    ClassDB::bind_method(D_METHOD("get_variable_count"), &WorldState::get_variable_count);
+    ClassDB::bind_method(D_METHOD("has_variable", "name"), &WorldState::has_variable);
+    ClassDB::bind_method(D_METHOD("get_variable_value", "name"), &WorldState::get_variable_value);
+    ClassDB::bind_method(D_METHOD("set_variable_value", "name", "value"), &WorldState::set_variable_value);
+    ClassDB::bind_method(D_METHOD("add_variable", "name", "value"), &WorldState::add_variable);
+}
+
+void WorldState::snapshot_from(const WorldState *src)
 {
     if (src == nullptr)
     {
@@ -13,11 +25,11 @@ void WorldState::SnapshotFrom(const WorldState *src)
     }
 
     data = src->data;
-    bSnapshot = true;
-    mainWorldState = src->bSnapshot ? src->mainWorldState : src;
+    is_snapshot = true;
+    master_world_state = src->is_snapshot ? src->master_world_state : src;
 }
 
-void WorldState::CopyDataFrom(const WorldState *src)
+void WorldState::copy_data_from(const WorldState *src)
 {
     if (src == nullptr)
         return;
@@ -28,70 +40,52 @@ void WorldState::CopyDataFrom(const WorldState *src)
     }
 }
 
-bool WorldState::IsValid() const noexcept
+bool WorldState::is_valid() const noexcept
 {
-    if (bSnapshot && mainWorldState == nullptr)
+    if (is_snapshot && master_world_state == nullptr)
         return false;
 
-    return data.size() == GetMetas().size() == GetKeyIndexMapping().size();
+    return data.size() == get_metas().size();
 }
 
-int WorldState::GetKeyID(const String &name) const
+int WorldState::get_variable_count() const noexcept { return data.size(); }
+
+int WorldState::get_variable_index(const String &name) const noexcept
 {
-    for (const auto &m : GetMetas())
+    for (int i = 0; i < get_metas().size(); i++)
     {
-        if (m.Name == name)
-        {
-            return m.KeyID;
-        }
+        if (get_metas()[i].name == name)
+            return i;
     }
     return -1;
 }
 
-int WorldState::GetVariableCount() const noexcept { return data.size(); }
+bool WorldState::has_variable(const String &name) const noexcept { return get_variable_index(name) != -1; }
 
-int WorldState::HasVariable(int KeyID) const
+Variant WorldState::get_variable_value(const String &name) noexcept
 {
-    const auto &k = GetKeyIndexMapping();
-    return k.find(KeyID) == k.end();
-}
-
-Variant WorldState::GetVariable(int KeyID) noexcept
-{
-    int index = GetKeyIndexMapping().at(KeyID);
+    int index = get_variable_index(name);
+    if (index == -1)
+        return Variant();
     return data[index];
 }
 
-void WorldState::SetVariable(int KeyID, const Variant &Data) noexcept
+void WorldState::set_variable_value(const String &name, const Variant &value) noexcept
 {
-    int index = GetKeyIndexMapping().at(KeyID);
-    data[index] = Data;
+    int index = get_variable_index(name);
+    if (index != -1)
+        data[index] = value;
 }
 
-void WorldState::AddVariable(int KeyID, const String &Name, const Variant &Data)
+void WorldState::add_variable(const String &name, const Variant &value)
 {
-    if (bSnapshot)
+    if (is_snapshot)
         return;
 
     Meta m = {};
-    m.Location = data.size();
-    m.KeyID = KeyID;
-    m.Name = Name;
+    m.location = data.size();
+    m.name = name;
 
-    data.push_back(Data);
+    data.push_back(value);
     metas.push_back(m);
-    keyIndexMapping.insert(std::pair<int, int>(KeyID, (int)(metas.size() - 1)));
-}
-
-void WorldState::_bind_methods()
-{
-    ClassDB::bind_method(D_METHOD("SnapshotFrom"), &WorldState::SnapshotFrom);
-    ClassDB::bind_method(D_METHOD("CopyDataFrom", "src"), &WorldState::CopyDataFrom);
-    ClassDB::bind_method(D_METHOD("IsValid"), &WorldState::IsValid);
-    ClassDB::bind_method(D_METHOD("GetKeyID", "Name"), &WorldState::GetKeyID);
-    ClassDB::bind_method(D_METHOD("GetVariableCount"), &WorldState::GetVariableCount);
-    ClassDB::bind_method(D_METHOD("HasVariable", "KeyID"), &WorldState::HasVariable);
-    ClassDB::bind_method(D_METHOD("GetVariable", "KeyID"), &WorldState::GetVariable);
-    ClassDB::bind_method(D_METHOD("SetVariable", "KeyID", "Data"), &WorldState::SetVariable);
-    ClassDB::bind_method(D_METHOD("AddVariable", "KeyID", "Name", "Data"), &WorldState::AddVariable);
 }

@@ -1,17 +1,18 @@
 #include "WorldStateAsset.h"
+#include "WorldState.h"
 
 //////////////////////////////////////////////////////////////////////////////////////
 // WorldStateEntryAsset
 //////////////////////////////////////////////////////////////////////////////////////
-WorldStateEntryAsset::WorldStateEntryAsset() : supportedType(SupportedType::Int), name(""), value(0) {}
+WorldStateEntryAsset::WorldStateEntryAsset() : supported_type(SupportedType::INT), name(""), value(0) {}
 
-WorldStateEntryAsset::SupportedType WorldStateEntryAsset::get_supported_type() const { return supportedType; }
+WorldStateEntryAsset::SupportedType WorldStateEntryAsset::get_supported_type() const { return supported_type; }
 void WorldStateEntryAsset::set_supported_type(SupportedType p_type)
 {
-    if (supportedType == p_type)
+    if (supported_type == p_type)
         return;
 
-    supportedType = p_type;
+    supported_type = p_type;
     reset_value();
 
     notify_property_list_changed();
@@ -20,15 +21,15 @@ void WorldStateEntryAsset::set_supported_type(SupportedType p_type)
 
 void WorldStateEntryAsset::reset_value()
 {
-    switch (supportedType)
+    switch (supported_type)
     {
-    case Int:
+    case INT:
         set_value(0);
         break;
-    case Float:
+    case FLOAT:
         set_value(0.0f);
         break;
-    case Bool:
+    case BOOL:
         set_value(false);
         break;
     }
@@ -43,9 +44,9 @@ void WorldStateEntryAsset::set_value(const Variant &p_value)
 
 void WorldStateEntryAsset::_bind_methods()
 {
-    BIND_ENUM_CONSTANT(Int);
-    BIND_ENUM_CONSTANT(Float);
-    BIND_ENUM_CONSTANT(Bool);
+    BIND_ENUM_CONSTANT(INT);
+    BIND_ENUM_CONSTANT(FLOAT);
+    BIND_ENUM_CONSTANT(BOOL);
 
     ClassDB::bind_method(D_METHOD("reset_value"), &WorldStateEntryAsset::reset_value);
 
@@ -64,18 +65,18 @@ void WorldStateEntryAsset::_bind_methods()
 void WorldStateEntryAsset::_get_property_list(List<PropertyInfo> *p_list) const
 {
     p_list->push_back(
-        PropertyInfo(Variant::INT, "supportedType", PROPERTY_HINT_ENUM, "Int,Float,Bool", PROPERTY_USAGE_DEFAULT));
+        PropertyInfo(Variant::INT, "supported_type", PROPERTY_HINT_ENUM, "INT,FLOAT,BOOL", PROPERTY_USAGE_DEFAULT));
 
     Variant::Type type = Variant::Type::NIL;
-    switch (supportedType)
+    switch (supported_type)
     {
-    case Int:
+    case INT:
         type = Variant::INT;
         break;
-    case Float:
+    case FLOAT:
         type = Variant::FLOAT;
         break;
-    case Bool:
+    case BOOL:
         type = Variant::BOOL;
         break;
     }
@@ -86,7 +87,7 @@ void WorldStateEntryAsset::_get_property_list(List<PropertyInfo> *p_list) const
 bool WorldStateEntryAsset::_get(const StringName &p_path, Variant &r_ret) const
 {
     String path = p_path;
-    if (path == "supportedType")
+    if (path == "supported_type")
     {
         r_ret = get_supported_type();
     }
@@ -104,7 +105,7 @@ bool WorldStateEntryAsset::_get(const StringName &p_path, Variant &r_ret) const
 bool WorldStateEntryAsset::_set(const StringName &p_path, const Variant &p_value)
 {
     String path = p_path;
-    if (path == "supportedType")
+    if (path == "supported_type")
     {
         set_supported_type((SupportedType)(unsigned int)p_value);
     }
@@ -137,4 +138,18 @@ void WorldStateAsset::_bind_methods()
                               String::num(Variant::OBJECT) + "/" + String::num(PROPERTY_HINT_RESOURCE_TYPE) +
                                   ":WorldStateEntryAsset"),
                  "set_entries", "get_entries");
+}
+
+WorldState *WorldStateAsset::create_runtime_world_state() const
+{
+    WorldState *ws = memnew(WorldState);
+    for (int i = 0; i < entries.size(); i++)
+    {
+        if (entries[i].get_type() == Variant::NIL)
+            continue;
+
+        Ref<WorldStateEntryAsset> entry = entries[i];
+        ws->add_variable(entry->get_name(), entry->get_value());
+    }
+    return ws;
 }

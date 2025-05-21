@@ -14,10 +14,10 @@ class GOAPActionBehaviour : public Object
 public:
     GOAPActionBehaviour();
 
-    void Start();
-    void Update(float deltaTime);
-    bool IsDone();
-    void End();
+    void start();
+    void update(float deltaTime);
+    bool is_done();
+    void end();
 
     GDVIRTUAL0(_start);
     GDVIRTUAL1(_update, float);

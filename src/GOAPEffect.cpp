@@ -4,12 +4,12 @@
 
 GOAPEffect::GOAPEffect() {}
 
-void GOAPEffect::_bind_methods() { GDVIRTUAL_BIND(_take_effect, "ws"); }
+void GOAPEffect::_bind_methods() { GDVIRTUAL_BIND(_apply, "ws"); }
 
-void GOAPEffect::TakeEffect(WorldState *ws)
+void GOAPEffect::apply(WorldState *ws)
 {
-    if (GDVIRTUAL_IS_OVERRIDDEN(_take_effect))
+    if (GDVIRTUAL_IS_OVERRIDDEN(_apply))
     {
-        GDVIRTUAL_CALL(_take_effect, ws);
+        GDVIRTUAL_CALL(_apply, ws);
     }
 }

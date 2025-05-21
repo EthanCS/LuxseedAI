@@ -14,8 +14,8 @@ class GOAPEffect : public Object
 public:
     GOAPEffect();
 
-    void TakeEffect(class WorldState *ws);
-    GDVIRTUAL1(_take_effect, godot::Object *);
+    void apply(class WorldState *ws);
+    GDVIRTUAL1(_apply, godot::Object *);
 
 protected:
     static void _bind_methods();

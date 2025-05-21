@@ -11,7 +11,7 @@ void GOAPActionBehaviour::_bind_methods()
     GDVIRTUAL_BIND(_end);
 }
 
-void GOAPActionBehaviour::Start()
+void GOAPActionBehaviour::start()
 {
     if (GDVIRTUAL_IS_OVERRIDDEN(_start))
     {
@@ -19,7 +19,7 @@ void GOAPActionBehaviour::Start()
     }
 }
 
-void GOAPActionBehaviour::Update(float deltaTime)
+void GOAPActionBehaviour::update(float deltaTime)
 {
     if (GDVIRTUAL_IS_OVERRIDDEN(_update))
     {
@@ -27,7 +27,7 @@ void GOAPActionBehaviour::Update(float deltaTime)
     }
 }
 
-bool GOAPActionBehaviour::IsDone()
+bool GOAPActionBehaviour::is_done()
 {
     if (GDVIRTUAL_IS_OVERRIDDEN(_is_done))
     {
@@ -38,7 +38,7 @@ bool GOAPActionBehaviour::IsDone()
     return true;
 }
 
-void GOAPActionBehaviour::End()
+void GOAPActionBehaviour::end()
 {
     if (GDVIRTUAL_IS_OVERRIDDEN(_end))
     {

@@ -7,6 +7,8 @@
 
 using namespace godot;
 
+class WorldState;
+
 class WorldStateEntryAsset : public Resource
 {
     GDCLASS(WorldStateEntryAsset, Resource)
@@ -14,14 +16,14 @@ class WorldStateEntryAsset : public Resource
 public:
     enum SupportedType : unsigned int
     {
-        Int,
-        Float,
-        Bool
+        INT,
+        FLOAT,
+        BOOL
     };
 
 private:
     String name;
-    SupportedType supportedType;
+    SupportedType supported_type;
     Variant value;
 
 protected:
@@ -63,6 +65,8 @@ public:
 
     TypedArray<WorldStateEntryAsset> get_entries() const { return entries; }
     void set_entries(const TypedArray<WorldStateEntryAsset> &p_entries) { entries = p_entries; }
+
+    WorldState *create_runtime_world_state() const;
 };
 
 #endif

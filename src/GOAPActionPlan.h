@@ -46,8 +46,8 @@ public:
 
     GOAPPlanner *GetPlanner() const noexcept { return planner; }
 
-    GOAPPlanner::Action *Get(int Index) noexcept { return planner->GetAction(actionSequences[Index]); }
-    const GOAPPlanner::Action *Get(int Index) const noexcept { return planner->GetAction(actionSequences[Index]); }
+    GOAPPlanner::Action *Get(int Index) noexcept { return planner->get_action(actionSequences[Index]); }
+    const GOAPPlanner::Action *Get(int Index) const noexcept { return planner->get_action(actionSequences[Index]); }
 
     void PushBack(int ActionIndex) { actionSequences.push_back(ActionIndex); }
     void Reverse() { std::reverse(actionSequences.begin(), actionSequences.end()); }

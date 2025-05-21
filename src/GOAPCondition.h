@@ -15,7 +15,7 @@ class GOAPCondition : public Object
 public:
     GOAPCondition();
 
-    bool IsPass(const class WorldState *ws);
+    bool is_pass(const class WorldState *ws);
     GDVIRTUAL1R(bool, _is_pass, const godot::Object *);
 
 protected:

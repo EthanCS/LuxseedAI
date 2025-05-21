@@ -6,7 +6,7 @@ GOAPCondition::GOAPCondition() {}
 
 void GOAPCondition::_bind_methods() { GDVIRTUAL_BIND(_is_pass, "ws"); }
 
-bool GOAPCondition::IsPass(const WorldState *ws)
+bool GOAPCondition::is_pass(const WorldState *ws)
 {
     if (GDVIRTUAL_IS_OVERRIDDEN(_is_pass))
     {

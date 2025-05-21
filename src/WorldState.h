@@ -14,23 +14,20 @@ class WorldState : public Object
 
     struct Meta
     {
-        int KeyID;
-        int Location;
-        String Name;
+        int location;
+        String name;
     };
 
 private:
     std::vector<Variant> data;
     std::vector<Meta> metas;
-    std::map<int, int> keyIndexMapping;
-    bool bSnapshot;
-    const WorldState *mainWorldState;
+    bool is_snapshot;
+    const WorldState *master_world_state;
 
 private:
-    inline const std::vector<Meta> &GetMetas() const noexcept { return bSnapshot ? mainWorldState->metas : metas; }
-    inline const std::map<int, int> &GetKeyIndexMapping() const noexcept
+    inline const std::vector<Meta> &get_metas() const noexcept
     {
-        return bSnapshot ? mainWorldState->keyIndexMapping : keyIndexMapping;
+        return is_snapshot ? master_world_state->metas : metas;
     }
 
 protected:
@@ -39,16 +36,17 @@ protected:
 public:
     WorldState();
 
-    void SnapshotFrom(const WorldState *src);
-    void CopyDataFrom(const WorldState *src);
+    void snapshot_from(const WorldState *src);
+    void copy_data_from(const WorldState *src);
+    bool is_valid() const noexcept;
+    int get_variable_count() const noexcept;
+    bool has_variable(const String &name) const noexcept;
+    Variant get_variable_value(const String &name) noexcept;
+    void set_variable_value(const String &name, const Variant &value) noexcept;
+    void add_variable(const String &name, const Variant &value);
 
-    bool IsValid() const noexcept;
-    int GetKeyID(const String &name) const;
-    int GetVariableCount() const noexcept;
-    int HasVariable(int KeyID) const;
-    Variant GetVariable(int KeyID) noexcept;
-    void SetVariable(int KeyID, const Variant &Data) noexcept;
-    void AddVariable(int KeyID, const String &Name, const Variant &Data);
+private:
+    int get_variable_index(const String &name) const noexcept;
 };
 
 #endif

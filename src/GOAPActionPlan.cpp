@@ -32,7 +32,7 @@ void GOAPActionPlan::Execute(WorldState *InWorldState, float InDeltaTime)
         return;
     }
 
-    if (!planner->IsGoalValid(goalIndex))
+    if (!planner->is_goal_valid(goalIndex))
     {
         godot::print_error("GOAPActionPlan::Execute: Invalid goal index {}", goalIndex);
         return;
@@ -41,24 +41,24 @@ void GOAPActionPlan::Execute(WorldState *InWorldState, float InDeltaTime)
     if (IsFinished() || IsEmpty())
         return;
 
-    if (!planner->IsActionValid(curActionIndex))
+    if (!planner->is_action_valid(curActionIndex))
         return;
 
-    GOAPPlanner::Action *action = planner->GetAction(curActionIndex);
+    GOAPPlanner::Action *action = planner->get_action(curActionIndex);
     action->SyncWorldStateProperty(InWorldState);
 
     if (bNeedStartAction)
     {
-        action->Start();
+        action->start();
         bNeedStartAction = false;
     }
 
-    action->Update(InDeltaTime);
+    action->update(InDeltaTime);
 
-    if (action->IsDone())
+    if (action->is_done())
     {
-        action->End();
-        action->ApplyEffect(InWorldState);
+        action->end();
+        action->apply_effect(InWorldState);
         curActionIndex++;
         bNeedStartAction = true;
     }
@@ -67,7 +67,7 @@ void GOAPActionPlan::Execute(WorldState *InWorldState, float InDeltaTime)
     {
         curActionIndex = actionSequences.size() - 1;
         bFinished = true;
-        GOAPPlanner::Goal *goal = planner->GetGoal(goalIndex);
-        goal->ApplyEffect(InWorldState);
+        GOAPPlanner::Goal *goal = planner->get_goal(goalIndex);
+        goal->apply_effect(InWorldState);
     }
 }
