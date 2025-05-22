@@ -40,6 +40,8 @@ void initialize_luxseedai_module(ModuleInitializationLevel p_level)
 #ifdef TOOLS_ENABLED
     else if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR)
     {
+        GDREGISTER_INTERNAL_CLASS(GOAPGoalNode);
+        GDREGISTER_INTERNAL_CLASS(GOAPActionNode);
         GDREGISTER_INTERNAL_CLASS(GOAPGraphEditor);
         GDREGISTER_INTERNAL_CLASS(GOAPEditorPlugin);
         EditorPlugins::add_by_type<GOAPEditorPlugin>();

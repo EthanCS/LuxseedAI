@@ -22,6 +22,8 @@ private:
     Ref<GDScript> condition;
     Ref<GDScript> effect;
 
+    Vector2 editor_position;
+
 protected:
     static void _bind_methods();
 
@@ -34,11 +36,14 @@ public:
     void set_priority(int p_priority);
     int get_priority() const;
 
-    void set_condition(const Ref<GDScript> &p_condition) { condition = p_condition; }
-    Ref<GDScript> get_condition() const { return condition; }
+    void set_condition(const Ref<GDScript> &p_condition) noexcept { condition = p_condition; }
+    Ref<GDScript> get_condition() const noexcept { return condition; }
 
-    void set_effect(const Ref<GDScript> &p_effect) { effect = p_effect; }
-    Ref<GDScript> get_effect() const { return effect; }
+    void set_effect(const Ref<GDScript> &p_effect) noexcept { effect = p_effect; }
+    Ref<GDScript> get_effect() const noexcept { return effect; }
+
+    void set_editor_position(const Vector2 &p_position) noexcept { editor_position = p_position; }
+    Vector2 get_editor_position() const noexcept { return editor_position; }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -54,6 +59,8 @@ private:
     Ref<GDScript> effect;
     Ref<GDScript> action;
 
+    Vector2 editor_position;
+
 protected:
     static void _bind_methods();
 
@@ -63,14 +70,17 @@ public:
     void set_name(const String &p_name);
     const String &get_name() const;
 
-    void set_condition(const Ref<GDScript> &p_condition) { condition = p_condition; }
-    Ref<GDScript> get_condition() const { return condition; }
+    void set_condition(const Ref<GDScript> &p_condition) noexcept { condition = p_condition; }
+    Ref<GDScript> get_condition() const noexcept { return condition; }
 
-    void set_effect(const Ref<GDScript> &p_effect) { effect = p_effect; }
-    Ref<GDScript> get_effect() const { return effect; }
+    void set_effect(const Ref<GDScript> &p_effect) noexcept { effect = p_effect; }
+    Ref<GDScript> get_effect() const noexcept { return effect; }
 
-    void set_action(const Ref<GDScript> &p_action) { action = p_action; }
-    Ref<GDScript> get_action() const { return action; }
+    void set_action(const Ref<GDScript> &p_action) noexcept { action = p_action; }
+    Ref<GDScript> get_action() const noexcept { return action; }
+
+    void set_editor_position(const Vector2 &p_position) noexcept { editor_position = p_position; }
+    Vector2 get_editor_position() const noexcept { return editor_position; }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +111,9 @@ public:
     Ref<WorldStateAsset> get_world_state_asset() const { return world_state_asset; }
 
     class GOAPPlanner *create_planner() const;
+
+    Ref<GOAPActionAsset> new_action_asset(const String &p_name, Vector2 p_editor_position = Vector2(0, 0));
+    Ref<GOAPGoalAsset> new_goal_asset(const String &p_name, Vector2 p_editor_position = Vector2(0, 0));
 };
 
 #endif // GOAP_ASSET_H

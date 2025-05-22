@@ -21,12 +21,16 @@ void GOAPGoalAsset::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_effect"), &GOAPGoalAsset::get_effect);
     ClassDB::bind_method(D_METHOD("set_effect", "effect"), &GOAPGoalAsset::set_effect);
 
+    ClassDB::bind_method(D_METHOD("get_editor_position"), &GOAPGoalAsset::get_editor_position);
+    ClassDB::bind_method(D_METHOD("set_editor_position", "position"), &GOAPGoalAsset::set_editor_position);
+
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "priority"), "set_priority", "get_priority");
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "condition", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_condition",
                  "get_condition");
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "effect", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_effect",
                  "get_effect");
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "editor_position"), "set_editor_position", "get_editor_position");
 }
 
 const String &GOAPGoalAsset::get_name() const { return name; }
@@ -54,6 +58,9 @@ void GOAPActionAsset::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_action"), &GOAPActionAsset::get_action);
     ClassDB::bind_method(D_METHOD("set_action", "action"), &GOAPActionAsset::set_action);
 
+    ClassDB::bind_method(D_METHOD("get_editor_position"), &GOAPActionAsset::get_editor_position);
+    ClassDB::bind_method(D_METHOD("set_editor_position", "position"), &GOAPActionAsset::set_editor_position);
+
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "condition", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_condition",
                  "get_condition");
@@ -61,6 +68,7 @@ void GOAPActionAsset::_bind_methods()
                  "get_effect");
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "action", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_action",
                  "get_action");
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "editor_position"), "set_editor_position", "get_editor_position");
 }
 
 const String &GOAPActionAsset::get_name() const { return name; }
@@ -136,4 +144,22 @@ GOAPPlanner *GOAPAsset::create_planner() const
     }
 
     return planner;
+}
+
+Ref<GOAPActionAsset> GOAPAsset::new_action_asset(const String &p_name, Vector2 p_editor_position)
+{
+    Ref<GOAPActionAsset> action = memnew(GOAPActionAsset);
+    action->set_name(p_name);
+    action->set_editor_position(p_editor_position);
+    action_assets.push_back(action);
+    return action;
+}
+
+Ref<GOAPGoalAsset> GOAPAsset::new_goal_asset(const String &p_name, Vector2 p_editor_position)
+{
+    Ref<GOAPGoalAsset> goal = memnew(GOAPGoalAsset);
+    goal->set_name(p_name);
+    goal->set_editor_position(p_editor_position);
+    goal_assets.push_back(goal);
+    return goal;
 }
