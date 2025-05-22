@@ -14,32 +14,40 @@
 #include "WorldState.h"
 #include "WorldStateAsset.h"
 
+#ifdef TOOLS_ENABLED
+#include "editor/GOAPEditorPlugin.h"
+#endif
+
 using namespace godot;
 
 void initialize_example_module(ModuleInitializationLevel p_level)
 {
-    if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE)
+    if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
     {
-        return;
+        GDREGISTER_RUNTIME_CLASS(WorldState);
+        GDREGISTER_CLASS(WorldStateAsset);
+        GDREGISTER_CLASS(WorldStateEntryAsset);
+
+        GDREGISTER_CLASS(GOAPAsset);
+        GDREGISTER_CLASS(GOAPGoalAsset);
+        GDREGISTER_CLASS(GOAPActionAsset);
+        GDREGISTER_RUNTIME_CLASS(GOAPActionBehaviour);
+        GDREGISTER_RUNTIME_CLASS(GOAPActionPlan);
+        GDREGISTER_RUNTIME_CLASS(GOAPPlanner);
+        GDREGISTER_RUNTIME_CLASS(GOAPCondition);
+        GDREGISTER_RUNTIME_CLASS(GOAPEffect);
     }
-
-    GDREGISTER_RUNTIME_CLASS(WorldState);
-    GDREGISTER_CLASS(WorldStateAsset);
-    GDREGISTER_CLASS(WorldStateEntryAsset);
-
-    GDREGISTER_CLASS(GOAPAsset);
-    GDREGISTER_CLASS(GOAPGoalAsset);
-    GDREGISTER_CLASS(GOAPActionAsset);
-    GDREGISTER_RUNTIME_CLASS(GOAPActionBehaviour);
-    GDREGISTER_RUNTIME_CLASS(GOAPActionPlan);
-    GDREGISTER_RUNTIME_CLASS(GOAPPlanner);
-    GDREGISTER_RUNTIME_CLASS(GOAPCondition);
-    GDREGISTER_RUNTIME_CLASS(GOAPEffect);
+#ifdef TOOLS_ENABLED
+    else if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR)
+    {
+        EditorPlugins::add_by_type<GOAPEditorPlugin>();
+    }
+#endif
 }
 
 void uninitialize_example_module(ModuleInitializationLevel p_level)
 {
-    if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE)
+    if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE && p_level != MODULE_INITIALIZATION_LEVEL_EDITOR)
     {
         return;
     }
