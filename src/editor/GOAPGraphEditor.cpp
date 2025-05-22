@@ -1,6 +1,9 @@
 #include "GOAPGraphEditor.h"
-#include "../GOAPPlanner.h"
 #include <godot_cpp/classes/engine.hpp>
+#include <godot_cpp/classes/input_event_mouse.hpp>
+#include <godot_cpp/classes/input_event_mouse_button.hpp>
+#include <godot_cpp/classes/popup_menu.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 void GOAPGraphEditor::_bind_methods()
 {
@@ -9,7 +12,7 @@ void GOAPGraphEditor::_bind_methods()
     ClassDB::bind_method(D_METHOD("add_action_node", "name"), &GOAPGraphEditor::add_action_node);
     ClassDB::bind_method(D_METHOD("add_goal_node", "name"), &GOAPGraphEditor::add_goal_node);
     ClassDB::bind_method(D_METHOD("remove_node", "id"), &GOAPGraphEditor::remove_node);
-    ClassDB::bind_method(D_METHOD("update_debug_view"), &GOAPGraphEditor::update_debug_view);
+    ClassDB::bind_method(D_METHOD("update_debug_view", "instance"), &GOAPGraphEditor::update_debug_view);
 
     ADD_SIGNAL(MethodInfo("node_selected", PropertyInfo(Variant::OBJECT, "node")));
     ADD_SIGNAL(MethodInfo("node_deleted", PropertyInfo(Variant::INT, "id")));
@@ -17,14 +20,25 @@ void GOAPGraphEditor::_bind_methods()
 
 GOAPGraphEditor::GOAPGraphEditor()
 {
+    context_menu = memnew(PopupMenu);
+    add_child(context_menu);
+    context_menu->add_item("Add Action", 0);
+    context_menu->add_item("Add Goal", 1);
+    context_menu->connect("id_pressed", callable_mp(this, &GOAPGraphEditor::_on_context_menu_id_pressed));
+
     next_node_position = Vector2(50, 50);
+
     connect("node_selected", callable_mp(this, &GOAPGraphEditor::_on_node_selected));
     connect("node_deleted", callable_mp(this, &GOAPGraphEditor::_on_node_deleted));
 }
 
 GOAPGraphEditor::~GOAPGraphEditor()
 {
-    // Cleanup resources
+    if (context_menu)
+    {
+        memdelete(context_menu);
+        context_menu = nullptr;
+    }
 }
 
 void GOAPGraphEditor::set_goap_asset(const Ref<GOAPAsset> &p_asset)
@@ -118,3 +132,30 @@ void GOAPGraphEditor::update_debug_view(const GOAPPlanner *p_planner)
 void GOAPGraphEditor::_on_node_selected(Node *p_node) { emit_signal("node_selected", p_node); }
 
 void GOAPGraphEditor::_on_node_deleted(int p_id) { emit_signal("node_deleted", p_id); }
+
+void GOAPGraphEditor::_gui_input(const Ref<InputEvent> &p_event)
+{
+    Ref<InputEventMouseButton> mb = p_event;
+    if (mb.is_valid() && mb->get_button_index() == MOUSE_BUTTON_RIGHT && mb->is_pressed())
+    {
+        Vector2 local_pos = get_local_mouse_position();
+        next_node_position = local_pos;
+
+        context_menu->set_position(get_screen_position() + mb->get_position());
+        context_menu->popup();
+        accept_event();
+    }
+}
+
+void GOAPGraphEditor::_on_context_menu_id_pressed(int p_id)
+{
+    switch (p_id)
+    {
+    case 0:
+        add_action_node("NewAction");
+        break;
+    case 1:
+        add_goal_node("NewGoal");
+        break;
+    }
+}

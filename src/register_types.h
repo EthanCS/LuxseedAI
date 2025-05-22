@@ -5,7 +5,7 @@
 
 using namespace godot;
 
-void initialize_example_module(ModuleInitializationLevel p_level);
-void uninitialize_example_module(ModuleInitializationLevel p_level);
+void initialize_luxseedai_module(ModuleInitializationLevel p_level);
+void uninitialize_luxseedai_module(ModuleInitializationLevel p_level);
 
 #endif // LUXSEED_AI_REGISTER_TYPES_H
