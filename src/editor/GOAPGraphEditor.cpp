@@ -32,7 +32,7 @@ void GOAPGraphNode::_notification(int p_what)
                 if (child->is_class("Label"))
                 {
                     Label *label = Object::cast_to<Label>(child);
-                    label->add_theme_font_size_override("font_size", 30);
+                    // label->add_theme_font_size_override("font_size", 30);
                     label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
                     label->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
                 }
@@ -52,7 +52,8 @@ void GOAPGraphNode::_on_asset_name_changed()
     {
         if (goal_asset.is_valid())
         {
-            set_title(goal_asset->get_name());
+            Label *label = Object::cast_to<Label>(get_child(0));
+            label->set_text(goal_asset->get_name());
             set_name(goal_asset->get_name());
         }
     }
@@ -60,7 +61,8 @@ void GOAPGraphNode::_on_asset_name_changed()
     {
         if (action_asset.is_valid())
         {
-            set_title(action_asset->get_name());
+            Label *label = Object::cast_to<Label>(get_child(0));
+            label->set_text(action_asset->get_name());
             set_name(action_asset->get_name());
         }
     }
@@ -92,12 +94,18 @@ GOAPGraphEditor::GOAPGraphEditor() : editor_interface(nullptr)
     if (Engine::get_singleton()->is_editor_hint())
         editor_interface = EditorInterface::get_singleton();
 
+    // Configure connection lines
+    set_connection_lines_curvature(0.0); // Straight lines
+    set_connection_lines_thickness(2.0);
+    set_connection_lines_antialiased(true);
+
     // Add new button
     new_button = memnew(Button);
     new_button->set_text("New Button");
     new_button->set_offset(godot::Side::SIDE_TOP, 50);
     new_button->set_offset(godot::Side::SIDE_LEFT, 10);
     new_button->connect("pressed", callable_mp(this, &GOAPGraphEditor::_on_new_button_pressed));
+    new_button->set_z_index(1000); // High z-index to ensure it stays on top
     add_child(new_button);
 
     // Add context menu
@@ -129,7 +137,6 @@ void GOAPGraphEditor::_bind_methods()
     ClassDB::bind_method(D_METHOD("add_goal_node", "goal"), &GOAPGraphEditor::add_goal_node);
     ClassDB::bind_method(D_METHOD("remove_node", "id"), &GOAPGraphEditor::remove_node);
     ClassDB::bind_method(D_METHOD("update_debug_view", "instance"), &GOAPGraphEditor::update_debug_view);
-    ClassDB::bind_method(D_METHOD("_on_new_button_pressed"), &GOAPGraphEditor::_on_new_button_pressed);
 }
 
 void GOAPGraphEditor::_on_node_selected(Node *node)
@@ -212,11 +219,23 @@ void GOAPGraphEditor::set_goap_asset(const Ref<GOAPAsset> &p_asset)
 
 void GOAPGraphEditor::add_action_node(Ref<GOAPActionAsset> p_action)
 {
+    if (p_action == nullptr)
+        return;
+
+    Label *label = memnew(Label);
+    label->set_text(p_action->get_name());
+    label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
+    label->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
+    label->add_theme_font_size_override("font_size", 30);
+
     GOAPGraphNode *node = memnew(GOAPGraphNode);
-    node->set_title(p_action->get_name());
+    node->set_title("Action");
     node->set_position_offset(p_action->get_editor_position());
     node->set_name(p_action->get_name());
     node->set_action_asset(p_action);
+    node->add_child(label);
+    node->set_slot(0, true, 0, Color(1, 1, 1), true, 0, Color(1, 1, 1));
+
     if (p_action.is_valid())
     {
         p_action->connect("name_changed", callable_mp(node, &GOAPGraphNode::_on_asset_name_changed));
@@ -226,11 +245,23 @@ void GOAPGraphEditor::add_action_node(Ref<GOAPActionAsset> p_action)
 
 void GOAPGraphEditor::add_goal_node(Ref<GOAPGoalAsset> p_goal)
 {
+    if (p_goal == nullptr)
+        return;
+
+    Label *label = memnew(Label);
+    label->set_text(p_goal->get_name());
+    label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
+    label->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
+    label->add_theme_font_size_override("font_size", 30);
+
     GOAPGraphNode *node = memnew(GOAPGraphNode);
-    node->set_title(p_goal->get_name());
+    node->set_title("Goal");
     node->set_position_offset(p_goal->get_editor_position());
     node->set_name(p_goal->get_name());
     node->set_goal_asset(p_goal);
+    node->add_child(label);
+    node->set_slot(0, true, 0, Color(1, 1, 1), false, 0, Color(1, 1, 1));
+
     if (p_goal.is_valid())
     {
         p_goal->connect("name_changed", callable_mp(node, &GOAPGraphNode::_on_asset_name_changed));
@@ -317,7 +348,45 @@ void GOAPGraphEditor::_gui_input(const Ref<InputEvent> &p_event)
     }
 }
 
-void GOAPGraphEditor::_on_new_button_pressed() { UtilityFunctions::print("New button pressed!"); }
+PackedVector2Array GOAPGraphEditor::_get_connection_line(const Vector2 &p_from_position,
+                                                         const Vector2 &p_to_position) const
+{
+    PackedVector2Array points;
+    points.push_back(p_from_position);
+    points.push_back(p_to_position);
+
+    // Add directional triangle in the middle
+    Vector2 dir = (p_to_position - p_from_position).normalized();
+    Vector2 mid = (p_from_position + p_to_position) * 0.5f;
+    Vector2 perp = Vector2(-dir.y, dir.x);
+
+    float triangle_size = 10.0f;
+    points.push_back(mid + dir * triangle_size);
+    points.push_back(mid + perp * triangle_size * 0.5f);
+    points.push_back(mid - perp * triangle_size * 0.5f);
+    points.push_back(mid + dir * triangle_size);
+
+    return points;
+}
+
+void GOAPGraphEditor::_on_new_button_pressed()
+{
+    if (goap_asset == nullptr)
+        return;
+
+    UtilityFunctions::print("New button pressed!");
+
+    clear_connections();
+
+    for (int i = 0; i < goap_asset->get_action_assets().size() - 1; i++)
+    {
+        GOAPActionAsset *from = goap_asset->get_action_asset(i).ptr();
+        GOAPActionAsset *to = goap_asset->get_action_asset(i + 1).ptr();
+
+        UtilityFunctions::print("Connecting ", from->get_name(), " to ", to->get_name());
+        connect_node(from->get_name(), 0, to->get_name(), 0);
+    }
+}
 
 void GOAPGraphEditor::_on_context_menu_id_pressed(int p_id)
 {

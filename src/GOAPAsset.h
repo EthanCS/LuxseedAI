@@ -109,6 +109,7 @@ public:
 
     void set_goal_assets(const TypedArray<GOAPGoalAsset> &p_goals);
     TypedArray<GOAPGoalAsset> get_goal_assets() const;
+    Ref<GOAPActionAsset> GOAPAsset::get_action_asset(int p_index) const { return action_assets[p_index]; }
 
     void set_action_assets(const TypedArray<GOAPActionAsset> &p_actions);
     TypedArray<GOAPActionAsset> get_action_assets() const;

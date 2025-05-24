@@ -91,6 +91,8 @@ protected:
 
 public:
     virtual void _gui_input(const Ref<InputEvent> &p_event) override;
+    virtual PackedVector2Array _get_connection_line(const Vector2 &p_from_position,
+                                                    const Vector2 &p_to_position) const override;
 
 public:
     GOAPGraphEditor();
