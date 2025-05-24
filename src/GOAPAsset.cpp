@@ -1,6 +1,7 @@
 #include "GOAPAsset.h"
 #include "GOAPPlanner.h"
 #include "WorldStateAsset.h"
+#include <algorithm>
 
 //////////////////////////////////////////////////////////////////////////////////////
 // GOAPGoalAsset
@@ -128,6 +129,8 @@ void GOAPAsset::_bind_methods()
                               String::num(Variant::OBJECT) + "/" + String::num(PROPERTY_HINT_RESOURCE_TYPE) +
                                   ":GOAPActionAsset"),
                  "set_action_assets", "get_action_assets");
+
+    ADD_SIGNAL(MethodInfo("debug_instance_list_changed"));
 }
 
 void GOAPAsset::set_goal_assets(const TypedArray<GOAPGoalAsset> &p_goals) { goal_assets = p_goals; }
@@ -165,6 +168,10 @@ GOAPPlanner *GOAPAsset::create_planner() const
         planner->add_action(action.ptr());
     }
 
+#ifdef TOOLS_ENABLED
+    planner->asset = this;
+#endif
+
     return planner;
 }
 
@@ -184,4 +191,25 @@ Ref<GOAPGoalAsset> GOAPAsset::new_goal_asset(const String &p_name, Vector2 p_edi
     goal->set_editor_position(p_editor_position);
     goal_assets.push_back(goal);
     return goal;
+}
+
+void GOAPAsset::set_debug(GOAPPlanner *p_planner, bool p_debugging)
+{
+    if (p_debugging)
+    {
+        if (std::find(debug_instances.begin(), debug_instances.end(), p_planner) == debug_instances.end())
+        {
+            debug_instances.push_back(p_planner);
+            emit_signal("debug_instance_list_changed");
+        }
+    }
+    else
+    {
+        auto it = std::find(debug_instances.begin(), debug_instances.end(), p_planner);
+        if (it != debug_instances.end())
+        {
+            debug_instances.erase(it);
+            emit_signal("debug_instance_list_changed");
+        }
+    }
 }

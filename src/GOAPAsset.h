@@ -109,10 +109,13 @@ public:
 
     void set_goal_assets(const TypedArray<GOAPGoalAsset> &p_goals);
     TypedArray<GOAPGoalAsset> get_goal_assets() const;
-    Ref<GOAPActionAsset> GOAPAsset::get_action_asset(int p_index) const { return action_assets[p_index]; }
+    Ref<GOAPGoalAsset> get_goal_asset(int p_index) const { return goal_assets[p_index]; }
+    void remove_goal_asset(Ref<GOAPGoalAsset> p_goal) { goal_assets.erase(p_goal); }
 
     void set_action_assets(const TypedArray<GOAPActionAsset> &p_actions);
     TypedArray<GOAPActionAsset> get_action_assets() const;
+    Ref<GOAPActionAsset> GOAPAsset::get_action_asset(int p_index) const { return action_assets[p_index]; }
+    void remove_action_asset(Ref<GOAPActionAsset> p_action) { action_assets.erase(p_action); }
 
     void set_world_state_asset(const Ref<WorldStateAsset> &p_world_state) { world_state_asset = p_world_state; }
     Ref<WorldStateAsset> get_world_state_asset() const { return world_state_asset; }
@@ -121,6 +124,13 @@ public:
 
     Ref<GOAPActionAsset> new_action_asset(const String &p_name, Vector2 p_editor_position = Vector2(0, 0));
     Ref<GOAPGoalAsset> new_goal_asset(const String &p_name, Vector2 p_editor_position = Vector2(0, 0));
+
+    // Debug
+private:
+    std::vector<class GOAPPlanner *> debug_instances;
+
+public:
+    void set_debug(class GOAPPlanner *p_planner, bool p_debugging);
 };
 
 #endif // GOAP_ASSET_H

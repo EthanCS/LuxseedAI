@@ -118,6 +118,24 @@ GOAPGraphEditor::GOAPGraphEditor() : editor_interface(nullptr)
     connect("node_selected", callable_mp(this, &GOAPGraphEditor::_on_node_selected));
     connect("node_deselected", callable_mp(this, &GOAPGraphEditor::_on_node_deselected));
     connect("delete_nodes_request", callable_mp(this, &GOAPGraphEditor::_on_delete_nodes_request));
+
+    // Create debug instance selector
+    debug_selector_container = memnew(HBoxContainer);
+    debug_selector_container->set_offset(SIDE_LEFT, 12);
+    debug_selector_container->set_offset(SIDE_TOP, 80);
+    debug_selector_container->set_z_index(1000);
+    add_child(debug_selector_container);
+
+    debug_label = memnew(Label);
+    debug_label->set_text("Debug Instance:");
+    debug_selector_container->add_child(debug_label);
+
+    debug_selector = memnew(OptionButton);
+    debug_selector->add_item("None", 0);
+    debug_selector->add_item("AAA", 1);
+    debug_selector->add_item("BBB", 2);
+    debug_selector->connect("item_selected", callable_mp(this, &GOAPGraphEditor::_on_debug_instance_selected));
+    debug_selector_container->add_child(debug_selector);
 }
 
 GOAPGraphEditor::~GOAPGraphEditor()
@@ -135,8 +153,8 @@ void GOAPGraphEditor::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_goap_asset"), &GOAPGraphEditor::get_goap_asset);
     ClassDB::bind_method(D_METHOD("add_action_node", "action"), &GOAPGraphEditor::add_action_node);
     ClassDB::bind_method(D_METHOD("add_goal_node", "goal"), &GOAPGraphEditor::add_goal_node);
-    ClassDB::bind_method(D_METHOD("remove_node", "id"), &GOAPGraphEditor::remove_node);
     ClassDB::bind_method(D_METHOD("update_debug_view", "instance"), &GOAPGraphEditor::update_debug_view);
+    ClassDB::bind_method(D_METHOD("_on_debug_instance_selected", "id"), &GOAPGraphEditor::_on_debug_instance_selected);
 }
 
 void GOAPGraphEditor::_on_node_selected(Node *node)
@@ -173,11 +191,52 @@ void GOAPGraphEditor::_on_node_deselected(Node *node)
     }
 }
 
+namespace
+{
+void get_selected_nodes(const GraphEdit &graph_edit, std::vector<GOAPGraphNode *> &out_nodes)
+{
+    for (int i = 0; i < graph_edit.get_child_count(); ++i)
+    {
+        GOAPGraphNode *node_view = Object::cast_to<GOAPGraphNode>(graph_edit.get_child(i));
+        if (node_view != nullptr)
+        {
+            if (node_view->is_selected())
+            {
+                out_nodes.push_back(node_view);
+            }
+        }
+    }
+}
+} // namespace
+
 void GOAPGraphEditor::_on_delete_nodes_request(Array node_names)
 {
-    for (int i = 0; i < node_names.size(); i++)
+    std::vector<GOAPGraphNode *> to_erase;
+    get_selected_nodes(*this, to_erase);
+
+    for (auto &graph_node : to_erase)
     {
-        UtilityFunctions::print("Node delete request: ", node_names[i]);
+        UtilityFunctions::print("Node delete request: ", graph_node->get_name());
+
+        Object *asset = graph_node->get_asset_object();
+        if (asset != nullptr)
+        {
+            if (graph_node->node_type == GOAPGraphNode::NodeType::GOAL)
+                goap_asset->remove_goal_asset(Ref<GOAPGoalAsset>(Object::cast_to<GOAPGoalAsset>(asset)));
+            else if (graph_node->node_type == GOAPGraphNode::NodeType::ACTION)
+                goap_asset->remove_action_asset(Ref<GOAPActionAsset>(Object::cast_to<GOAPActionAsset>(asset)));
+        }
+
+        remove_child(graph_node);
+        if (godot::Engine::get_singleton()->is_editor_hint())
+        {
+            memdelete(graph_node);
+        }
+    }
+
+    if (editor_interface && Engine::get_singleton()->is_editor_hint())
+    {
+        editor_interface->inspect_object(goap_asset.ptr());
     }
 }
 
@@ -186,19 +245,31 @@ void GOAPGraphEditor::set_goap_asset(const Ref<GOAPAsset> &p_asset)
     if (goap_asset == p_asset)
         return;
 
+    // Cleanup previous asset
+    if (goap_asset != nullptr)
+    {
+        // Clear nodes
+        for (int i = get_child_count() - 1; i >= 0; i--)
+        {
+            Node *child = get_child(i);
+            if (child->is_class("GOAPGraphNode"))
+            {
+                remove_child(child);
+                memdelete(child);
+            }
+        }
+
+        goap_asset->disconnect("debug_instance_list_changed",
+                               callable_mp(this, &GOAPGraphEditor::_on_debug_instance_list_changed));
+    }
+
     print_line("GOAPGraphEditor::set_goap_asset " + p_asset->get_path());
+
     goap_asset = p_asset;
 
-    // Clear nodes
-    for (int i = get_child_count() - 1; i >= 0; i--)
-    {
-        Node *child = get_child(i);
-        if (child->is_class("GOAPGraphNode"))
-        {
-            remove_child(child);
-            memdelete(child);
-        }
-    }
+    // Events
+    goap_asset->connect("debug_instance_list_changed",
+                        callable_mp(this, &GOAPGraphEditor::_on_debug_instance_list_changed));
 
     // Add action nodes
     TypedArray<GOAPActionAsset> actions = p_asset->get_action_assets();
@@ -267,23 +338,6 @@ void GOAPGraphEditor::add_goal_node(Ref<GOAPGoalAsset> p_goal)
         p_goal->connect("name_changed", callable_mp(node, &GOAPGraphNode::_on_asset_name_changed));
     }
     add_child(node);
-}
-
-void GOAPGraphEditor::remove_node(int p_id)
-{
-    Node *node = find_child(String::num_int64(p_id), true);
-    if (!node)
-        return;
-
-    // Disconnect all signals first
-    node->disconnect("close_request", callable_mp(this, &GOAPGraphEditor::_on_node_deleted));
-
-    // Remove and delete the node
-    remove_child(node);
-    if (godot::Engine::get_singleton()->is_editor_hint())
-    {
-        memdelete(node);
-    }
 }
 
 void GOAPGraphEditor::update_debug_view(const GOAPPlanner *p_planner)
@@ -402,4 +456,15 @@ void GOAPGraphEditor::_on_context_menu_id_pressed(int p_id)
         add_goal_node(goap_asset->new_goal_asset("NewGoal", next_node_position));
         break;
     }
+}
+
+void GOAPGraphEditor::_on_debug_instance_selected(int p_id)
+{
+    UtilityFunctions::print("Debug instance selected: ", p_id);
+    // TODO: Implement debug instance selection logic
+}
+
+void GOAPGraphEditor::_on_debug_instance_list_changed()
+{
+    // TODO: Implement debug instance changed logic
 }

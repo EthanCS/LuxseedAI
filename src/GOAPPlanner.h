@@ -117,6 +117,17 @@ public:
             return nullptr;
         return &goals[index];
     }
+
+public:
+#ifdef TOOLS_ENABLED
+    Ref<GOAPAsset> asset;
+    
+    void set_debug(bool p_debugging)
+    {
+        if (asset != nullptr)
+            asset->set_debug(this, p_debugging);
+    }
+#endif
 };
 
 #endif

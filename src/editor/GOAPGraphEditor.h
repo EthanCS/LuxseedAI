@@ -7,6 +7,9 @@
 #include <godot_cpp/classes/graph_node.hpp>
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/style_box_flat.hpp>
+#include <godot_cpp/classes/option_button.hpp>
+#include <godot_cpp/classes/label.hpp>
+#include <godot_cpp/classes/h_box_container.hpp>
 
 #include "../GOAPAsset.h"
 #include "../GOAPPlanner.h"
@@ -75,6 +78,9 @@ private:
     Ref<GOAPAsset> goap_asset;
     PopupMenu *context_menu;
     Button *new_button;
+    HBoxContainer *debug_selector_container;
+    Label *debug_label;
+    OptionButton *debug_selector;
     Vector2 next_node_position;
     EditorInterface *editor_interface;
 
@@ -88,6 +94,9 @@ protected:
     void _on_node_deleted(int p_id);
     void _on_context_menu_id_pressed(int p_id);
     void _on_new_button_pressed();
+
+    void _on_debug_instance_selected(int p_id);
+    void _on_debug_instance_list_changed();
 
 public:
     virtual void _gui_input(const Ref<InputEvent> &p_event) override;
@@ -103,8 +112,6 @@ public:
 
     void add_action_node(Ref<GOAPActionAsset> p_action);
     void add_goal_node(Ref<GOAPGoalAsset> p_goal);
-
-    void remove_node(int p_id);
 
     void update_debug_view(const GOAPPlanner *p_planner);
 };
