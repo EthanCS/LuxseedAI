@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/graph_edit.hpp>
 #include <godot_cpp/classes/graph_node.hpp>
 #include <godot_cpp/classes/input_event.hpp>
+#include <godot_cpp/classes/style_box_flat.hpp>
 
 #include "../GOAPAsset.h"
 #include "../GOAPPlanner.h"
@@ -14,42 +15,54 @@ using namespace godot;
 
 class GOAPPlanner;
 
-class GOAPGoalNode : public GraphNode
+class GOAPGraphNode : public GraphNode
 {
-    GDCLASS(GOAPGoalNode, GraphNode)
+    GDCLASS(GOAPGraphNode, GraphNode)
+
+public:
+    enum class NodeType : unsigned int
+    {
+        UNKNOWN,
+        GOAL,
+        ACTION
+    };
 
 private:
     Ref<GOAPGoalAsset> goal_asset;
-
-protected:
-    void _notification(int p_what);
-    static void _bind_methods();
-    void _on_asset_name_changed();
-
-public:
-    GOAPGoalNode();
-    void set_goal_asset(const Ref<GOAPGoalAsset> &p_asset) noexcept { goal_asset = p_asset; }
-    Ref<GOAPGoalAsset> get_goal_asset() const noexcept { return goal_asset; }
-
-    friend class GOAPGraphEditor;
-};
-
-class GOAPActionNode : public GraphNode
-{
-    GDCLASS(GOAPActionNode, GraphNode)
-
-private:
     Ref<GOAPActionAsset> action_asset;
+    NodeType node_type;
 
 protected:
     void _notification(int p_what);
     static void _bind_methods();
     void _on_asset_name_changed();
+    static StyleBoxFlat *get_titlebar_stylebox_flat(NodeType p_node_type);
 
 public:
-    GOAPActionNode();
-    void set_action_asset(const Ref<GOAPActionAsset> &p_asset) noexcept { action_asset = p_asset; }
-    Ref<GOAPActionAsset> get_action_asset() const noexcept { return action_asset; }
+    GOAPGraphNode();
+
+    NodeType get_node_type() const noexcept { return node_type; }
+
+    godot::Object *get_asset_object() const noexcept
+    {
+        if (node_type == NodeType::GOAL && goal_asset.is_valid())
+            return goal_asset.ptr();
+        else if (node_type == NodeType::ACTION && action_asset.is_valid())
+            return action_asset.ptr();
+        return nullptr;
+    }
+
+    void set_goal_asset(const Ref<GOAPGoalAsset> &p_asset) noexcept
+    {
+        goal_asset = p_asset;
+        node_type = NodeType::GOAL;
+    }
+
+    void set_action_asset(const Ref<GOAPActionAsset> &p_asset) noexcept
+    {
+        action_asset = p_asset;
+        node_type = NodeType::ACTION;
+    }
 
     friend class GOAPGraphEditor;
 };
@@ -61,6 +74,7 @@ class GOAPGraphEditor : public GraphEdit
 private:
     Ref<GOAPAsset> goap_asset;
     PopupMenu *context_menu;
+    Button *new_button;
     Vector2 next_node_position;
     EditorInterface *editor_interface;
 
@@ -73,6 +87,7 @@ protected:
 
     void _on_node_deleted(int p_id);
     void _on_context_menu_id_pressed(int p_id);
+    void _on_new_button_pressed();
 
 public:
     virtual void _gui_input(const Ref<InputEvent> &p_event) override;
@@ -90,8 +105,6 @@ public:
     void remove_node(int p_id);
 
     void update_debug_view(const GOAPPlanner *p_planner);
-
-    Node *get_node_at_position(const Vector2 &p_position) const;
 };
 
 #endif // GOAP_GRAPH_EDITOR_H

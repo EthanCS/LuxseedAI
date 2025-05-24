@@ -1,78 +1,87 @@
 #include "GOAPGraphEditor.h"
+#include <godot_cpp/classes/button.hpp>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/graph_node.hpp>
+#include <godot_cpp/classes/h_box_container.hpp>
 #include <godot_cpp/classes/input_event_mouse.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
+#include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/popup_menu.hpp>
 #include <godot_cpp/classes/style_box_flat.hpp>
 #include <godot_cpp/classes/theme.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 //////////////////////////////////////////////////////////////////////////////////////
-// GOAPGoalNode
+// GOAPGraphNode
 //////////////////////////////////////////////////////////////////////////////////////
-GOAPGoalNode::GOAPGoalNode() : goal_asset(nullptr) { set_name("GOAPGoalNode"); }
+GOAPGraphNode::GOAPGraphNode() : goal_asset(nullptr), action_asset(nullptr), node_type(NodeType::UNKNOWN) {}
 
-void GOAPGoalNode::_notification(int p_what)
+void GOAPGraphNode::_notification(int p_what)
 {
-    if (p_what == NOTIFICATION_READY)
+    if (p_what == NOTIFICATION_ENTER_TREE)
     {
-        // Make node larger
-        set_custom_minimum_size(Vector2(200, 150));
+        HBoxContainer *titlebar = get_titlebar_hbox();
+        if (titlebar != nullptr)
+        {
+            this->add_theme_stylebox_override("titlebar", get_titlebar_stylebox_flat(node_type));
+            this->add_theme_stylebox_override("titlebar_selected", get_titlebar_stylebox_flat(node_type));
 
-        // Set green background
-        Ref<StyleBoxFlat> sb = get_theme_stylebox("panel")->duplicate();
-        sb->set_bg_color(Color(0.2, 0.8, 0.2));
-        add_theme_stylebox_override("panel", sb);
-
-        // Make title bigger
-        add_theme_font_size_override("title_font_size", 20);
+            for (int i = 0; i < titlebar->get_child_count(); i++)
+            {
+                Node *child = titlebar->get_child(i);
+                if (child->is_class("Label"))
+                {
+                    Label *label = Object::cast_to<Label>(child);
+                    label->add_theme_font_size_override("font_size", 30);
+                    label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
+                    label->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
+                }
+            }
+        }
     }
 }
 
-void GOAPGoalNode::_bind_methods()
+void GOAPGraphNode::_bind_methods()
 {
-    ClassDB::bind_method(D_METHOD("_on_asset_name_changed"), &GOAPGoalNode::_on_asset_name_changed);
+    ClassDB::bind_method(D_METHOD("_on_asset_name_changed"), &GOAPGraphNode::_on_asset_name_changed);
 }
 
-void GOAPGoalNode::_on_asset_name_changed()
+void GOAPGraphNode::_on_asset_name_changed()
 {
-    if (goal_asset.is_valid())
+    if (node_type == NodeType::GOAL)
     {
-        set_title(goal_asset->get_name());
-        set_name(goal_asset->get_name());
+        if (goal_asset.is_valid())
+        {
+            set_title(goal_asset->get_name());
+            set_name(goal_asset->get_name());
+        }
+    }
+    else if (node_type == NodeType::ACTION)
+    {
+        if (action_asset.is_valid())
+        {
+            set_title(action_asset->get_name());
+            set_name(action_asset->get_name());
+        }
     }
 }
 
-//////////////////////////////////////////////////////////////////////////////////////
-// GOAPActionNode
-//////////////////////////////////////////////////////////////////////////////////////
-GOAPActionNode::GOAPActionNode() : action_asset(nullptr) { set_name("GOAPActionNode"); }
-
-void GOAPActionNode::_notification(int p_what)
+StyleBoxFlat *GOAPGraphNode::get_titlebar_stylebox_flat(NodeType p_node_type)
 {
-    if (p_what == NOTIFICATION_READY)
-    {
-        // Make node larger
-        set_custom_minimum_size(Vector2(200, 150));
+    static StyleBoxFlat *stylebox_flat_goal = memnew(StyleBoxFlat);
+    stylebox_flat_goal->set_bg_color(Color::html("#004d0d"));
+    stylebox_flat_goal->set_content_margin_all(0);
 
-        // Make title bigger
-        add_theme_font_size_override("title_font_size", 20);
-    }
-}
+    static StyleBoxFlat *stylebox_flat_action = memnew(StyleBoxFlat);
+    stylebox_flat_action->set_bg_color(Color::html("#4d3800"));
+    stylebox_flat_action->set_content_margin_all(0);
 
-void GOAPActionNode::_bind_methods()
-{
-    ClassDB::bind_method(D_METHOD("_on_asset_name_changed"), &GOAPActionNode::_on_asset_name_changed);
-}
+    if (p_node_type == NodeType::GOAL)
+        return stylebox_flat_goal;
+    else if (p_node_type == NodeType::ACTION)
+        return stylebox_flat_action;
 
-void GOAPActionNode::_on_asset_name_changed()
-{
-    if (action_asset.is_valid())
-    {
-        set_title(action_asset->get_name());
-        set_name(action_asset->get_name());
-    }
+    return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -80,11 +89,19 @@ void GOAPActionNode::_on_asset_name_changed()
 //////////////////////////////////////////////////////////////////////////////////////
 GOAPGraphEditor::GOAPGraphEditor() : editor_interface(nullptr)
 {
-    context_menu = memnew(PopupMenu);
-
     if (Engine::get_singleton()->is_editor_hint())
         editor_interface = EditorInterface::get_singleton();
 
+    // Add new button
+    new_button = memnew(Button);
+    new_button->set_text("New Button");
+    new_button->set_offset(godot::Side::SIDE_TOP, 50);
+    new_button->set_offset(godot::Side::SIDE_LEFT, 10);
+    new_button->connect("pressed", callable_mp(this, &GOAPGraphEditor::_on_new_button_pressed));
+    add_child(new_button);
+
+    // Add context menu
+    context_menu = memnew(PopupMenu);
     add_child(context_menu);
     context_menu->add_item("Add Action", 0);
     context_menu->add_item("Add Goal", 1);
@@ -112,6 +129,7 @@ void GOAPGraphEditor::_bind_methods()
     ClassDB::bind_method(D_METHOD("add_goal_node", "goal"), &GOAPGraphEditor::add_goal_node);
     ClassDB::bind_method(D_METHOD("remove_node", "id"), &GOAPGraphEditor::remove_node);
     ClassDB::bind_method(D_METHOD("update_debug_view", "instance"), &GOAPGraphEditor::update_debug_view);
+    ClassDB::bind_method(D_METHOD("_on_new_button_pressed"), &GOAPGraphEditor::_on_new_button_pressed);
 }
 
 void GOAPGraphEditor::_on_node_selected(Node *node)
@@ -123,22 +141,13 @@ void GOAPGraphEditor::_on_node_selected(Node *node)
 
     if (editor_interface && Engine::get_singleton()->is_editor_hint())
     {
-        if (node->is_class("GOAPActionNode"))
+        if (node->is_class("GOAPGraphNode"))
         {
-            GOAPActionNode *action_node = Object::cast_to<GOAPActionNode>(node);
-            Ref<GOAPActionAsset> asset = action_node->get_action_asset();
-            if (asset.is_valid())
+            GOAPGraphNode *graph_node = Object::cast_to<GOAPGraphNode>(node);
+            Object *asset = graph_node->get_asset_object();
+            if (asset != nullptr)
             {
-                editor_interface->inspect_object(asset.ptr());
-            }
-        }
-        else if (node->is_class("GOAPGoalNode"))
-        {
-            GOAPGoalNode *goal_node = Object::cast_to<GOAPGoalNode>(node);
-            Ref<GOAPGoalAsset> asset = goal_node->get_goal_asset();
-            if (asset.is_valid())
-            {
-                editor_interface->inspect_object(asset.ptr());
+                editor_interface->inspect_object(asset);
             }
         }
     }
@@ -177,7 +186,7 @@ void GOAPGraphEditor::set_goap_asset(const Ref<GOAPAsset> &p_asset)
     for (int i = get_child_count() - 1; i >= 0; i--)
     {
         Node *child = get_child(i);
-        if (child->is_class("GOAPActionNode") || child->is_class("GOAPGoalNode"))
+        if (child->is_class("GOAPGraphNode"))
         {
             remove_child(child);
             memdelete(child);
@@ -203,28 +212,28 @@ void GOAPGraphEditor::set_goap_asset(const Ref<GOAPAsset> &p_asset)
 
 void GOAPGraphEditor::add_action_node(Ref<GOAPActionAsset> p_action)
 {
-    GOAPActionNode *node = memnew(GOAPActionNode);
+    GOAPGraphNode *node = memnew(GOAPGraphNode);
     node->set_title(p_action->get_name());
     node->set_position_offset(p_action->get_editor_position());
     node->set_name(p_action->get_name());
     node->set_action_asset(p_action);
     if (p_action.is_valid())
     {
-        p_action->connect("name_changed", callable_mp(node, &GOAPActionNode::_on_asset_name_changed));
+        p_action->connect("name_changed", callable_mp(node, &GOAPGraphNode::_on_asset_name_changed));
     }
     add_child(node);
 }
 
 void GOAPGraphEditor::add_goal_node(Ref<GOAPGoalAsset> p_goal)
 {
-    GOAPGoalNode *node = memnew(GOAPGoalNode);
+    GOAPGraphNode *node = memnew(GOAPGraphNode);
     node->set_title(p_goal->get_name());
     node->set_position_offset(p_goal->get_editor_position());
     node->set_name(p_goal->get_name());
     node->set_goal_asset(p_goal);
     if (p_goal.is_valid())
     {
-        p_goal->connect("name_changed", callable_mp(node, &GOAPGoalNode::_on_asset_name_changed));
+        p_goal->connect("name_changed", callable_mp(node, &GOAPGraphNode::_on_asset_name_changed));
     }
     add_child(node);
 }
@@ -291,38 +300,12 @@ void GOAPGraphEditor::update_debug_view(const GOAPPlanner *p_planner)
 
 void GOAPGraphEditor::_on_node_deleted(int p_id) { emit_signal("node_deleted", p_id); }
 
-Node *GOAPGraphEditor::get_node_at_position(const Vector2 &p_position) const
-{
-    for (int i = 0; i < get_child_count(); i++)
-    {
-        Node *child = get_child(i);
-        if (child->is_class("GraphNode"))
-        {
-            GraphNode *node = Object::cast_to<GraphNode>(child);
-            if (node->get_global_rect().has_point(p_position))
-            {
-                return node;
-            }
-        }
-    }
-    return nullptr;
-}
-
 void GOAPGraphEditor::_gui_input(const Ref<InputEvent> &p_event)
 {
     Ref<InputEventMouseButton> mb = p_event;
     if (mb.is_valid() && mb->is_pressed())
     {
-        if (mb->get_button_index() == MOUSE_BUTTON_LEFT)
-        {
-            // Handle left click selection
-            Node *clicked = get_node_at_position(get_local_mouse_position());
-            if (clicked && clicked->is_class("GraphNode"))
-            {
-                _on_node_selected(clicked);
-            }
-        }
-        else if (mb->get_button_index() == MOUSE_BUTTON_RIGHT)
+        if (mb->get_button_index() == MOUSE_BUTTON_RIGHT)
         {
             Vector2 local_pos = get_local_mouse_position();
             next_node_position = local_pos;
@@ -333,6 +316,8 @@ void GOAPGraphEditor::_gui_input(const Ref<InputEvent> &p_event)
         }
     }
 }
+
+void GOAPGraphEditor::_on_new_button_pressed() { UtilityFunctions::print("New button pressed!"); }
 
 void GOAPGraphEditor::_on_context_menu_id_pressed(int p_id)
 {
