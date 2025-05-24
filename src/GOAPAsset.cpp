@@ -11,6 +11,7 @@ void GOAPGoalAsset::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("get_name"), &GOAPGoalAsset::get_name);
     ClassDB::bind_method(D_METHOD("set_name", "name"), &GOAPGoalAsset::set_name);
+    ClassDB::bind_method(D_METHOD("_name_changed"), &GOAPGoalAsset::_name_changed);
 
     ClassDB::bind_method(D_METHOD("get_priority"), &GOAPGoalAsset::get_priority);
     ClassDB::bind_method(D_METHOD("set_priority", "priority"), &GOAPGoalAsset::set_priority);
@@ -24,6 +25,8 @@ void GOAPGoalAsset::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_editor_position"), &GOAPGoalAsset::get_editor_position);
     ClassDB::bind_method(D_METHOD("set_editor_position", "position"), &GOAPGoalAsset::set_editor_position);
 
+    ADD_SIGNAL(MethodInfo("name_changed"));
+
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "priority"), "set_priority", "get_priority");
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "condition", PROPERTY_HINT_RESOURCE_TYPE, "GDScript"), "set_condition",
@@ -33,8 +36,16 @@ void GOAPGoalAsset::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "editor_position"), "set_editor_position", "get_editor_position");
 }
 
-const String &GOAPGoalAsset::get_name() const { return name; }
-void GOAPGoalAsset::set_name(const String &p_name) { name = p_name; }
+void GOAPGoalAsset::set_name(const String &p_name)
+{
+    if (name != p_name)
+    {
+        name = p_name;
+        _name_changed();
+    }
+}
+
+void GOAPGoalAsset::_name_changed() { emit_signal("name_changed"); }
 
 int GOAPGoalAsset::get_priority() const { return priority; }
 void GOAPGoalAsset::set_priority(int p_priority) { priority = p_priority; }
@@ -48,6 +59,9 @@ void GOAPActionAsset::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("get_name"), &GOAPActionAsset::get_name);
     ClassDB::bind_method(D_METHOD("set_name", "name"), &GOAPActionAsset::set_name);
+    ClassDB::bind_method(D_METHOD("_name_changed"), &GOAPActionAsset::_name_changed);
+
+    ADD_SIGNAL(MethodInfo("name_changed"));
 
     ClassDB::bind_method(D_METHOD("get_condition"), &GOAPActionAsset::get_condition);
     ClassDB::bind_method(D_METHOD("set_condition", "condition"), &GOAPActionAsset::set_condition);
@@ -71,8 +85,16 @@ void GOAPActionAsset::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "editor_position"), "set_editor_position", "get_editor_position");
 }
 
-const String &GOAPActionAsset::get_name() const { return name; }
-void GOAPActionAsset::set_name(const String &p_name) { name = p_name; }
+void GOAPActionAsset::set_name(const String &p_name)
+{
+    if (name != p_name)
+    {
+        name = p_name;
+        _name_changed();
+    }
+}
+
+void GOAPActionAsset::_name_changed() { emit_signal("name_changed"); }
 
 //////////////////////////////////////////////////////////////////////////////////////
 // GOAPAsset

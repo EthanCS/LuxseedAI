@@ -1,6 +1,7 @@
 #ifndef GOAP_GRAPH_EDITOR_H
 #define GOAP_GRAPH_EDITOR_H
 
+#include <godot_cpp/classes/editor_interface.hpp>
 #include <godot_cpp/classes/editor_plugin.hpp>
 #include <godot_cpp/classes/graph_edit.hpp>
 #include <godot_cpp/classes/graph_node.hpp>
@@ -23,11 +24,14 @@ private:
 protected:
     void _notification(int p_what);
     static void _bind_methods();
+    void _on_asset_name_changed();
 
 public:
     GOAPGoalNode();
     void set_goal_asset(const Ref<GOAPGoalAsset> &p_asset) noexcept { goal_asset = p_asset; }
     Ref<GOAPGoalAsset> get_goal_asset() const noexcept { return goal_asset; }
+
+    friend class GOAPGraphEditor;
 };
 
 class GOAPActionNode : public GraphNode
@@ -40,11 +44,14 @@ private:
 protected:
     void _notification(int p_what);
     static void _bind_methods();
+    void _on_asset_name_changed();
 
 public:
     GOAPActionNode();
     void set_action_asset(const Ref<GOAPActionAsset> &p_asset) noexcept { action_asset = p_asset; }
     Ref<GOAPActionAsset> get_action_asset() const noexcept { return action_asset; }
+
+    friend class GOAPGraphEditor;
 };
 
 class GOAPGraphEditor : public GraphEdit
@@ -55,11 +62,15 @@ private:
     Ref<GOAPAsset> goap_asset;
     PopupMenu *context_menu;
     Vector2 next_node_position;
+    EditorInterface *editor_interface;
 
 protected:
     static void _bind_methods();
 
     void _on_node_selected(Node *p_node);
+    void _on_node_deselected(Node *p_node);
+    void _on_delete_nodes_request(Array node_names);
+
     void _on_node_deleted(int p_id);
     void _on_context_menu_id_pressed(int p_id);
 
@@ -71,7 +82,7 @@ public:
     ~GOAPGraphEditor();
 
     void set_goap_asset(const Ref<GOAPAsset> &p_asset);
-    Ref<GOAPAsset> get_goap_asset() const;
+    Ref<GOAPAsset> get_goap_asset() const { return goap_asset; }
 
     void add_action_node(Ref<GOAPActionAsset> p_action);
     void add_goal_node(Ref<GOAPGoalAsset> p_goal);
@@ -79,6 +90,8 @@ public:
     void remove_node(int p_id);
 
     void update_debug_view(const GOAPPlanner *p_planner);
+
+    Node *get_node_at_position(const Vector2 &p_position) const;
 };
 
 #endif // GOAP_GRAPH_EDITOR_H

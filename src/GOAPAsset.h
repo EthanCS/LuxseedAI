@@ -18,6 +18,9 @@ class GOAPGoalAsset : public Resource
 
 private:
     String name;
+
+protected:
+    void _name_changed();
     int priority;
     Ref<GDScript> condition;
     Ref<GDScript> effect;
@@ -31,7 +34,7 @@ public:
     GOAPGoalAsset();
 
     void set_name(const String &p_name);
-    const String &get_name() const;
+    const String &get_name() const noexcept { return name; }
 
     void set_priority(int p_priority);
     int get_priority() const;
@@ -55,6 +58,9 @@ class GOAPActionAsset : public Resource
 
 private:
     String name;
+
+protected:
+    void _name_changed();
     Ref<GDScript> condition;
     Ref<GDScript> effect;
     Ref<GDScript> action;
@@ -68,7 +74,7 @@ public:
     GOAPActionAsset();
 
     void set_name(const String &p_name);
-    const String &get_name() const;
+    const String &get_name() const noexcept { return name; }
 
     void set_condition(const Ref<GDScript> &p_condition) noexcept { condition = p_condition; }
     Ref<GDScript> get_condition() const noexcept { return condition; }

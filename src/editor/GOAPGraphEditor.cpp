@@ -4,43 +4,95 @@
 #include <godot_cpp/classes/input_event_mouse.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/classes/popup_menu.hpp>
+#include <godot_cpp/classes/style_box_flat.hpp>
+#include <godot_cpp/classes/theme.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
-GOAPGoalNode::GOAPGoalNode() : goal_asset(nullptr) {}
+//////////////////////////////////////////////////////////////////////////////////////
+// GOAPGoalNode
+//////////////////////////////////////////////////////////////////////////////////////
+GOAPGoalNode::GOAPGoalNode() : goal_asset(nullptr) { set_name("GOAPGoalNode"); }
 
-void GOAPGoalNode::_notification(int p_what) {}
-
-void GOAPGoalNode::_bind_methods() {}
-
-GOAPActionNode::GOAPActionNode() : action_asset(nullptr) {}
-
-void GOAPActionNode::_notification(int p_what) {}
-
-void GOAPActionNode::_bind_methods() {}
-
-void GOAPGraphEditor::_bind_methods()
+void GOAPGoalNode::_notification(int p_what)
 {
-    ClassDB::bind_method(D_METHOD("set_goap_asset", "asset"), &GOAPGraphEditor::set_goap_asset);
-    ClassDB::bind_method(D_METHOD("get_goap_asset"), &GOAPGraphEditor::get_goap_asset);
-    ClassDB::bind_method(D_METHOD("add_action_node", "name"), &GOAPGraphEditor::add_action_node);
-    ClassDB::bind_method(D_METHOD("add_goal_node", "name"), &GOAPGraphEditor::add_goal_node);
-    ClassDB::bind_method(D_METHOD("remove_node", "id"), &GOAPGraphEditor::remove_node);
-    ClassDB::bind_method(D_METHOD("update_debug_view", "instance"), &GOAPGraphEditor::update_debug_view);
+    if (p_what == NOTIFICATION_READY)
+    {
+        // Make node larger
+        set_custom_minimum_size(Vector2(200, 150));
 
-    ADD_SIGNAL(MethodInfo("node_selected", PropertyInfo(Variant::OBJECT, "node")));
-    ADD_SIGNAL(MethodInfo("node_deleted", PropertyInfo(Variant::INT, "id")));
+        // Set green background
+        Ref<StyleBoxFlat> sb = get_theme_stylebox("panel")->duplicate();
+        sb->set_bg_color(Color(0.2, 0.8, 0.2));
+        add_theme_stylebox_override("panel", sb);
+
+        // Make title bigger
+        add_theme_font_size_override("title_font_size", 20);
+    }
 }
 
-GOAPGraphEditor::GOAPGraphEditor()
+void GOAPGoalNode::_bind_methods()
+{
+    ClassDB::bind_method(D_METHOD("_on_asset_name_changed"), &GOAPGoalNode::_on_asset_name_changed);
+}
+
+void GOAPGoalNode::_on_asset_name_changed()
+{
+    if (goal_asset.is_valid())
+    {
+        set_title(goal_asset->get_name());
+        set_name(goal_asset->get_name());
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// GOAPActionNode
+//////////////////////////////////////////////////////////////////////////////////////
+GOAPActionNode::GOAPActionNode() : action_asset(nullptr) { set_name("GOAPActionNode"); }
+
+void GOAPActionNode::_notification(int p_what)
+{
+    if (p_what == NOTIFICATION_READY)
+    {
+        // Make node larger
+        set_custom_minimum_size(Vector2(200, 150));
+
+        // Make title bigger
+        add_theme_font_size_override("title_font_size", 20);
+    }
+}
+
+void GOAPActionNode::_bind_methods()
+{
+    ClassDB::bind_method(D_METHOD("_on_asset_name_changed"), &GOAPActionNode::_on_asset_name_changed);
+}
+
+void GOAPActionNode::_on_asset_name_changed()
+{
+    if (action_asset.is_valid())
+    {
+        set_title(action_asset->get_name());
+        set_name(action_asset->get_name());
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// GOAPGraphEditor
+//////////////////////////////////////////////////////////////////////////////////////
+GOAPGraphEditor::GOAPGraphEditor() : editor_interface(nullptr)
 {
     context_menu = memnew(PopupMenu);
+
+    if (Engine::get_singleton()->is_editor_hint())
+        editor_interface = EditorInterface::get_singleton();
+
     add_child(context_menu);
     context_menu->add_item("Add Action", 0);
     context_menu->add_item("Add Goal", 1);
     context_menu->connect("id_pressed", callable_mp(this, &GOAPGraphEditor::_on_context_menu_id_pressed));
 
     connect("node_selected", callable_mp(this, &GOAPGraphEditor::_on_node_selected));
-    connect("node_deleted", callable_mp(this, &GOAPGraphEditor::_on_node_deleted));
+    connect("node_deselected", callable_mp(this, &GOAPGraphEditor::_on_node_deselected));
+    connect("delete_nodes_request", callable_mp(this, &GOAPGraphEditor::_on_delete_nodes_request));
 }
 
 GOAPGraphEditor::~GOAPGraphEditor()
@@ -49,6 +101,67 @@ GOAPGraphEditor::~GOAPGraphEditor()
     {
         memdelete(context_menu);
         context_menu = nullptr;
+    }
+}
+
+void GOAPGraphEditor::_bind_methods()
+{
+    ClassDB::bind_method(D_METHOD("set_goap_asset", "asset"), &GOAPGraphEditor::set_goap_asset);
+    ClassDB::bind_method(D_METHOD("get_goap_asset"), &GOAPGraphEditor::get_goap_asset);
+    ClassDB::bind_method(D_METHOD("add_action_node", "action"), &GOAPGraphEditor::add_action_node);
+    ClassDB::bind_method(D_METHOD("add_goal_node", "goal"), &GOAPGraphEditor::add_goal_node);
+    ClassDB::bind_method(D_METHOD("remove_node", "id"), &GOAPGraphEditor::remove_node);
+    ClassDB::bind_method(D_METHOD("update_debug_view", "instance"), &GOAPGraphEditor::update_debug_view);
+}
+
+void GOAPGraphEditor::_on_node_selected(Node *node)
+{
+    if (node == nullptr)
+        return;
+
+    UtilityFunctions::print("Node selected: ", node->get_name());
+
+    if (editor_interface && Engine::get_singleton()->is_editor_hint())
+    {
+        if (node->is_class("GOAPActionNode"))
+        {
+            GOAPActionNode *action_node = Object::cast_to<GOAPActionNode>(node);
+            Ref<GOAPActionAsset> asset = action_node->get_action_asset();
+            if (asset.is_valid())
+            {
+                editor_interface->inspect_object(asset.ptr());
+            }
+        }
+        else if (node->is_class("GOAPGoalNode"))
+        {
+            GOAPGoalNode *goal_node = Object::cast_to<GOAPGoalNode>(node);
+            Ref<GOAPGoalAsset> asset = goal_node->get_goal_asset();
+            if (asset.is_valid())
+            {
+                editor_interface->inspect_object(asset.ptr());
+            }
+        }
+    }
+}
+
+void GOAPGraphEditor::_on_node_deselected(Node *node)
+{
+    if (node == nullptr)
+        return;
+
+    UtilityFunctions::print("Node unselected: ", node->get_name());
+
+    if (editor_interface && Engine::get_singleton()->is_editor_hint())
+    {
+        editor_interface->inspect_object(goap_asset.ptr());
+    }
+}
+
+void GOAPGraphEditor::_on_delete_nodes_request(Array node_names)
+{
+    for (int i = 0; i < node_names.size(); i++)
+    {
+        UtilityFunctions::print("Node delete request: ", node_names[i]);
     }
 }
 
@@ -63,23 +176,8 @@ void GOAPGraphEditor::set_goap_asset(const Ref<GOAPAsset> &p_asset)
     // Clear nodes
     for (int i = get_child_count() - 1; i >= 0; i--)
     {
-        bool is_removed = false;
         Node *child = get_child(i);
-
-        if (child->is_class("GraphNode"))
-        {
-            GraphNode *node = Object::cast_to<GraphNode>(child);
-            // node->set_action_asset(nullptr);
-            is_removed = true;
-        }
-        // else if (child->is_class("GOAPGoalNode"))
-        // {
-        //     GOAPGoalNode *node = Object::cast_to<GOAPGoalNode>(child);
-        //     node->set_goal_asset(nullptr);
-        //     is_removed = true;
-        // }
-
-        if (is_removed)
+        if (child->is_class("GOAPActionNode") || child->is_class("GOAPGoalNode"))
         {
             remove_child(child);
             memdelete(child);
@@ -103,28 +201,31 @@ void GOAPGraphEditor::set_goap_asset(const Ref<GOAPAsset> &p_asset)
     update_debug_view(nullptr);
 }
 
-Ref<GOAPAsset> GOAPGraphEditor::get_goap_asset() const { return goap_asset; }
-
 void GOAPGraphEditor::add_action_node(Ref<GOAPActionAsset> p_action)
 {
-    GraphNode *node = memnew(GraphNode);
+    GOAPActionNode *node = memnew(GOAPActionNode);
     node->set_title(p_action->get_name());
     node->set_position_offset(p_action->get_editor_position());
     node->set_name(p_action->get_name());
-    // node->connect("close_request", callable_mp(this,
-    // &GOAPGraphEditor::_on_node_deleted).bind(node->get_instance_id())); node->connect("selected", callable_mp(this,
-    // &GOAPGraphEditor::_on_node_selected));
+    node->set_action_asset(p_action);
+    if (p_action.is_valid())
+    {
+        p_action->connect("name_changed", callable_mp(node, &GOAPActionNode::_on_asset_name_changed));
+    }
     add_child(node);
 }
 
 void GOAPGraphEditor::add_goal_node(Ref<GOAPGoalAsset> p_goal)
 {
-    GraphNode *node = memnew(GraphNode);
+    GOAPGoalNode *node = memnew(GOAPGoalNode);
     node->set_title(p_goal->get_name());
     node->set_position_offset(p_goal->get_editor_position());
     node->set_name(p_goal->get_name());
-    // node->connect("close_request", callable_mp(this,
-    // &GOAPGraphEditor::_on_node_deleted).bind(node->get_instance_id()));
+    node->set_goal_asset(p_goal);
+    if (p_goal.is_valid())
+    {
+        p_goal->connect("name_changed", callable_mp(node, &GOAPGoalNode::_on_asset_name_changed));
+    }
     add_child(node);
 }
 
@@ -188,28 +289,48 @@ void GOAPGraphEditor::update_debug_view(const GOAPPlanner *p_planner)
     // }
 }
 
-void GOAPGraphEditor::_on_node_selected(Node *p_node)
-{
-    if (p_node && (p_node->is_class("GraphNode")))
-    {
-        print_line("GOAPGraphEditor::_on_node_selected " + p_node->get_name());
-        emit_signal("node_selected", p_node);
-    }
-}
-
 void GOAPGraphEditor::_on_node_deleted(int p_id) { emit_signal("node_deleted", p_id); }
+
+Node *GOAPGraphEditor::get_node_at_position(const Vector2 &p_position) const
+{
+    for (int i = 0; i < get_child_count(); i++)
+    {
+        Node *child = get_child(i);
+        if (child->is_class("GraphNode"))
+        {
+            GraphNode *node = Object::cast_to<GraphNode>(child);
+            if (node->get_global_rect().has_point(p_position))
+            {
+                return node;
+            }
+        }
+    }
+    return nullptr;
+}
 
 void GOAPGraphEditor::_gui_input(const Ref<InputEvent> &p_event)
 {
     Ref<InputEventMouseButton> mb = p_event;
-    if (mb.is_valid() && mb->get_button_index() == MOUSE_BUTTON_RIGHT && mb->is_pressed())
+    if (mb.is_valid() && mb->is_pressed())
     {
-        Vector2 local_pos = get_local_mouse_position();
-        next_node_position = local_pos;
+        if (mb->get_button_index() == MOUSE_BUTTON_LEFT)
+        {
+            // Handle left click selection
+            Node *clicked = get_node_at_position(get_local_mouse_position());
+            if (clicked && clicked->is_class("GraphNode"))
+            {
+                _on_node_selected(clicked);
+            }
+        }
+        else if (mb->get_button_index() == MOUSE_BUTTON_RIGHT)
+        {
+            Vector2 local_pos = get_local_mouse_position();
+            next_node_position = local_pos;
 
-        context_menu->set_position(get_screen_position() + mb->get_position());
-        context_menu->popup();
-        accept_event();
+            context_menu->set_position(get_screen_position() + mb->get_position());
+            context_menu->popup();
+            accept_event();
+        }
     }
 }
 
